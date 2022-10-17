@@ -40,11 +40,18 @@ function greet(string $name): string {
     return "Hello, $name!";
 }
 
-// index() and greet() are mounted at '/api'.
-// This maps '/api' -> index() and '/api/greet/[name]' -> greet() according to their attributes above.
-//
-// You can pass first-class-callables or just the method name to the mount method.
-Miniphox::build()->mount('/api', [index(...), 'greet'])->run();
+// This creates a new Miniphox app.
+Miniphox::build()
+
+    // index() and greet() are mounted at '/api'.
+    // This maps '/api' -> index() and '/api/greet/[name]' -> greet() according to their attributes above.
+    //
+    // You can pass first-class-callables or just the method name to the mount method.
+    ->mount('/api', [index(...), 'greet'])
+
+    // This will start the HTTP server on http://0.0.0.0:8008.
+    // Pass a string uri to bind to a specific ip address or a different port.
+    ->run();
 ```
 
 The example above is the simplest way to use Miniphox.
