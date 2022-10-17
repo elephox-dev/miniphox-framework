@@ -3,9 +3,18 @@
 TL;DR:
 
 ```bash
-composer create-project elephox/miniphox-template; \
+composer create-project -s dev elephox/miniphox-template my-api && \
+cd my-api && \
 php public/server.php
 ```
+
+Then:
+
+```bash
+curl http://localhost:8008/api/greet/$(whoami)
+```
+
+Done.
 
 ### Miniphox explained as fast as possible
 
