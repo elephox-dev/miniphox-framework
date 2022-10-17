@@ -1,0 +1,26 @@
+{
+    "name": "elephox/miniphox",
+    "description": "A minimal API framework based on Elephox.",
+    "license": "MIT",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Ricardo Boss",
+            "email": "contact@ricardoboss.de"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "react/http": "^1.8",
+        "elephox/collection": "dev-develop",
+        "elephox/di": "dev-develop",
+        "elephox/logging": "dev-develop"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Elephox\\Miniphox\\": "src/"
+        }
+    }
+}
