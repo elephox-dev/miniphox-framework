@@ -195,10 +195,7 @@ class Miniphox
         $httpUri = str_replace(['tcp', '0.0.0.0'], ['http', 'localhost'], $uri);
         $this->info("Starting HTTP server at <blue><underline>$httpUri</underline></blue>");
 
-        $http = new HttpServer(
-            ...$this->middlewares,
-            $this->handle(...),
-        );
+        $http = new HttpServer(...[...$this->middlewares, $this->handle(...)]);
 
         $http->on('error', fn(Throwable $error) => $this->error($error));
         $http->listen($socket);
