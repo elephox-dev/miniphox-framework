@@ -66,7 +66,6 @@ class Miniphox
         $this->services->addSingleton(LoggerInterface::class, SingleSinkLogger::class, fn(): SingleSinkLogger => new SingleSinkLogger(new EnhancedMessageSink(new SimpleFormatColorSink(new StandardSink()))));
 
         $this->middlewares = [
-            new StreamingRequestMiddleware(),
             new LimitConcurrentRequestsMiddleware(100),
             new RequestBodyParserMiddleware(),
         ];
