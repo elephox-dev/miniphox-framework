@@ -55,6 +55,7 @@ class Miniphox
 
     protected array $routeHandlerCache = [];
     protected array $routingTable = [];
+    public array $middlewares;
     public readonly ServiceCollection $services;
 
     protected function __construct(
@@ -63,6 +64,12 @@ class Miniphox
     {
         $this->services = new ServiceCollectionImpl();
         $this->services->addSingleton(LoggerInterface::class, SingleSinkLogger::class, fn(): SingleSinkLogger => new SingleSinkLogger(new EnhancedMessageSink(new SimpleFormatColorSink(new StandardSink()))));
+
+        $this->middlewares = [
+            new StreamingRequestMiddleware(),
+            new LimitConcurrentRequestsMiddleware(100),
+            new RequestBodyParserMiddleware(),
+        ];
     }
 
     protected function getLogger(): LoggerInterface
@@ -189,9 +196,7 @@ class Miniphox
         $this->info("Starting HTTP server at <blue><underline>$httpUri</underline></blue>");
 
         $http = new HttpServer(
-            new StreamingRequestMiddleware(),
-            new LimitConcurrentRequestsMiddleware(100),
-            new RequestBodyParserMiddleware(),
+            ...$this->middlewares,
             $this->handle(...),
         );
 
