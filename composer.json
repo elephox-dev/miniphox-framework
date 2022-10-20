@@ -14,7 +14,8 @@
         "react/http": "^1.8",
         "elephox/collection": "dev-develop",
         "elephox/di": "dev-develop",
-        "elephox/logging": "dev-develop"
+        "elephox/logging": "dev-develop",
+        "ricardoboss/php-console-logger": "^2.3"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

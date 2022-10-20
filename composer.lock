@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f5b882a29b2a702d08d3c5d2227a8173",
+    "content-hash": "db8d998faa53d8c8243a693afb3cb4b7",
     "packages": [
         {
             "name": "elephox/collection",
@@ -54,12 +54,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/elephox-dev/di.git",
-                "reference": "125df554d6cf5d1d399e8920de439a43f14954d6"
+                "reference": "a5183b6a3edde2bbf387cf7b483d6041b0394b06"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elephox-dev/di/zipball/125df554d6cf5d1d399e8920de439a43f14954d6",
-                "reference": "125df554d6cf5d1d399e8920de439a43f14954d6",
+                "url": "https://api.github.com/repos/elephox-dev/di/zipball/a5183b6a3edde2bbf387cf7b483d6041b0394b06",
+                "reference": "a5183b6a3edde2bbf387cf7b483d6041b0394b06",
                 "shasum": ""
             },
             "require": {
@@ -93,7 +93,7 @@
                 "issues": "https://github.com/elephox-dev/framework/issues",
                 "source": "https://github.com/elephox-dev/framework"
             },
-            "time": "2022-07-19T22:34:12+00:00"
+            "time": "2022-10-17T22:35:14+00:00"
         },
         {
             "name": "elephox/logging",
@@ -1183,16 +1183,16 @@
         },
         {
             "name": "ricardoboss/php-console-logger",
-            "version": "v2.2.0",
+            "version": "v2.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ricardoboss/php-console-logger.git",
-                "reference": "e3329a5dd672c3d27fa202a69d99633f782e2305"
+                "reference": "eae7df9654a3509994f5d5a0afdc04fd83dcdb6d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ricardoboss/php-console-logger/zipball/e3329a5dd672c3d27fa202a69d99633f782e2305",
-                "reference": "e3329a5dd672c3d27fa202a69d99633f782e2305",
+                "url": "https://api.github.com/repos/ricardoboss/php-console-logger/zipball/eae7df9654a3509994f5d5a0afdc04fd83dcdb6d",
+                "reference": "eae7df9654a3509994f5d5a0afdc04fd83dcdb6d",
                 "shasum": ""
             },
             "require": {
@@ -1218,9 +1218,9 @@
             "description": "A simple console logger for scripts or small applications.",
             "support": {
                 "issues": "https://github.com/ricardoboss/php-console-logger/issues",
-                "source": "https://github.com/ricardoboss/php-console-logger/tree/v2.2.0"
+                "source": "https://github.com/ricardoboss/php-console-logger/tree/v2.3.0"
             },
-            "time": "2022-04-29T09:53:55+00:00"
+            "time": "2022-10-20T19:25:38+00:00"
         },
         {
             "name": "ringcentral/psr7",

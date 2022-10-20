@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Elephox\Miniphox;
 
+use Closure;
 use Elephox\Collection\Enumerable;
 use Elephox\Collection\KeyedEnumerable;
-use Elephox\Collection\KeyValuePair;
 use Elephox\DI\Contract\ServiceCollection;
 use Elephox\DI\ServiceCollection as ServiceCollectionImpl;
 use Elephox\Logging\EnhancedMessageSink;
@@ -22,12 +22,11 @@ use React\Http\HttpServer;
 use React\Http\Message\Response;
 use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
 use React\Http\Middleware\RequestBodyParserMiddleware;
-use React\Http\Middleware\StreamingRequestMiddleware;
-use React\Socket\ConnectionInterface;
 use React\Socket\SocketServer;
 use ReflectionAttribute;
 use ReflectionException;
 use ReflectionFunction;
+use ricardoboss\Console;
 use Stringable;
 use Throwable;
 
@@ -54,7 +53,7 @@ class Miniphox
     }
 
     protected array $routeHandlerCache = [];
-    protected array $routingTable = [];
+    protected array $routeMap = [];
     public array $middlewares;
     public readonly ServiceCollection $services;
 
@@ -108,24 +107,6 @@ class Miniphox
 
         $base = self::normalizePathPart($base);
 
-        $this->debug(sprintf("Mounting <gray>%s</gray> route(s) with base <gray>'%s'</gray>.", is_countable($routes) ? count($routes) : 'TBD', $base));
-
-        $absolutePathParts = [];
-        $pathParts = explode('/', $base);
-        $parentRoutes = &$this->routingTable;
-        foreach ($pathParts as $pathPart) {
-            if (empty($pathPart)) {
-                continue;
-            }
-
-            if (!isset($parentRoutes[$pathPart])) {
-                $parentRoutes[$pathPart] = [self::METHODS_ROUTE_KEY => []];
-            }
-
-            $parentRoutes = &$parentRoutes[$pathPart];
-            $absolutePathParts[] = $pathPart;
-        }
-
         foreach ($routes as $route) {
             if (is_string($route)) {
                 // qualify function name with app namespace so reflection works
@@ -138,61 +119,87 @@ class Miniphox
 
             try {
                 $functionReflection = new ReflectionFunction($route);
-                $attrReflections = $functionReflection->getAttributes(HttpMethodAttribute::class, ReflectionAttribute::IS_INSTANCEOF);
-
-                if (empty($attrReflections)) {
-                    $this->info("Function <green>{$functionReflection->getName()}</green> was mounted but has no HTTP attributes. Skipping.");
-
-                    continue;
-                }
             } catch (ReflectionException $re) {
                 $this->error(sprintf("%s while accessing <green>%s</green>: %s", $re::class, is_string($route) ? ("function " . $route . "()") : $route, $re->getMessage()));
 
                 continue;
             }
 
-            foreach ($attrReflections as $attrReflection) {
-                /** @var HttpMethodAttribute $attr */
-                $attr = $attrReflection->newInstance();
-                $path = $attr->path;
-                $verb = $attr->verb;
-
-                $destination = &$parentRoutes;
-                if (empty($path)) {
-                    $destinationPath = implode('/', $absolutePathParts);
-                } else {
-                    $pathPart = strtok($path, '/');
-                    while ($pathPart !== false) {
-                        $pathPart = self::normalizePathPart($pathPart);
-                        if (!isset($destination[$pathPart])) {
-                            $destination[$pathPart] = [self::METHODS_ROUTE_KEY => []];
-                        }
-
-                        $destinationPath = implode('/', [...$absolutePathParts, $pathPart]);
-                        $destination = &$destination[$pathPart];
-                        $pathPart = strtok('/');
-                    }
-                }
-
-                if (isset($destination[self::METHODS_ROUTE_KEY][$verb])) {
-                    $this->warning("Function <green>{$functionReflection->getName()}</green> overwrites handler for <magenta>$verb</magenta> at <gray>$destinationPath</gray>");
-                }
-
-                $destination[self::METHODS_ROUTE_KEY][$verb] = $functionReflection->getClosure();
-            }
+            $this->registerFunction($base, $functionReflection);
         }
 
         return $this;
     }
 
+    protected function registerFunction(string $basePath, ReflectionFunction $functionReflection): void
+    {
+        $attributes = $functionReflection->getAttributes(HttpMethodAttribute::class, ReflectionAttribute::IS_INSTANCEOF);
+
+        if (empty($attributes)) {
+            $this->info("Function <green>{$functionReflection->getName()}</green> was mounted but has no HTTP method attributes.");
+
+            return;
+        }
+
+        foreach ($attributes as $attribute) {
+            $attributeInstance = $attribute->newInstance();
+
+            assert($attributeInstance instanceof HttpMethodAttribute);
+
+            $attributePath = '/' . $attributeInstance->path;
+            $path = $basePath . $attributePath;
+            $verb = $attributeInstance->verb;
+            $closure = $functionReflection->getClosure();
+
+            $success = $this->setVerbHandler($path, $verb, $closure, false);
+            if (!$success) {
+                $this->warning("Handler for <magenta>$verb</magenta> <blue>$path</blue> already exists. Skipping.");
+            }
+        }
+    }
+
+    protected function setVerbHandler(string $path, string $verb, Closure $closure, bool $overwrite): ?bool
+    {
+        $destinationRoute = &$this->routeMap;
+
+        $pathPart = strtok($path, '/');
+        while ($pathPart !== false) {
+            $pathPart = self::normalizePathPart($pathPart);
+            if (!isset($destinationRoute[$pathPart])) {
+                $destinationRoute[$pathPart] = [self::METHODS_ROUTE_KEY => []];
+            }
+
+            $destinationRoute = &$destinationRoute[$pathPart];
+            $pathPart = strtok('/');
+        }
+
+        assert(isset($destinationRoute[self::METHODS_ROUTE_KEY]));
+
+        $exists = isset($destinationRoute[self::METHODS_ROUTE_KEY][$verb]);
+
+        if ($exists) {
+            if (!$overwrite) {
+                return false; // handler for this route and verb already exists and should not be overwritten
+            }
+
+            $this->warning("Overwriting handler for <magenta>$verb</magenta> <blue>$path</blue>");
+        }
+
+        $destinationRoute[self::METHODS_ROUTE_KEY][$verb] = $closure;
+
+        return true;
+    }
+
     public function run(string $uri = 'tcp://0.0.0.0:8008'): never
     {
+        $this->printRoutingTable();
+
         $socket = new SocketServer($uri);
 
         $socket->on('error', fn(Throwable $error) => $this->error($error));
 
         $httpUri = str_replace(['tcp', '0.0.0.0'], ['http', 'localhost'], $uri);
-        $this->info("Starting HTTP server at <blue><underline>$httpUri</underline></blue>");
+        $this->info("Running HTTP server at <blue><underline>$httpUri</underline></blue>");
 
         $http = new HttpServer(...[...$this->middlewares, $this->handle(...)]);
 
@@ -202,12 +209,38 @@ class Miniphox
         exit;
     }
 
+    protected function printRoutingTable(): void
+    {
+        $this->info("All available routes:");
+        $table = [['Methods', 'Route']];
+        $flattenMap = static function (array $map, array $path, callable $self) use (&$table): void {
+            foreach ($map as $part => $row) {
+                if ($part === self::METHODS_ROUTE_KEY && !empty($row)) {
+                    $table[] = [
+                        implode(", ", array_keys($row)),
+                        Console::link(implode("/", $path)),
+                    ];
+
+                    continue;
+                }
+
+                $self($row, [...$path, $part], $self);
+            }
+        };
+
+        $flattenMap($this->routeMap, [''], $flattenMap);
+
+        foreach (Console::table($table, compact: true) as $line) {
+            $this->info($line);
+        }
+    }
+
     protected function handle(ServerRequestInterface $request): ResponseInterface
     {
         $routingTimer = -hrtime(true);
 
         $path = $request->getUri()->getPath();
-        $routes = &$this->routingTable;
+        $routes = &$this->routeMap;
 
         $handlerArgs = [];
 
@@ -304,7 +337,8 @@ class Miniphox
         return $this->logResponse($request, $response);
     }
 
-    protected function addPerformanceAttributes(ServerRequestInterface $request, float $routingTimer): ServerRequestInterface {
+    protected function addPerformanceAttributes(ServerRequestInterface $request, float $routingTimer): ServerRequestInterface
+    {
         return $request
             ->withAttribute('performance-timer-routing', ($routingTimer + hrtime(true)) / 1e+6)
             ->withAttribute('performance-timer-handling', -hrtime(true));
@@ -341,7 +375,7 @@ class Miniphox
         $routingTimingHeaderParts = explode(';', $response->getHeader('Server-Timing')[0]);
         $routingTimingHeaderDur = (float)substr(end($routingTimingHeaderParts), 4);
         $handlingTimingHeaderParts = explode(';', $response->getHeader('Server-Timing')[1]);
-        $handlingTimingHeaderDur = (float) substr(end($handlingTimingHeaderParts), 4);
+        $handlingTimingHeaderDur = (float)substr(end($handlingTimingHeaderParts), 4);
 
         $this->info(sprintf(
             '<blue>%s</blue> -> <%s>%d</%2$s>%s <gray>[r:%.3fms; h:%.3fms]</gray>',
