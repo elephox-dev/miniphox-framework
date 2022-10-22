@@ -15,7 +15,7 @@ use stdClass;
 #[Get('/redirect')]
 function redirect(): Response
 {
-    return new Response(StatusCodeInterface::STATUS_TEMPORARY_REDIRECT, ['Location' => '/']);
+    return new Response(StatusCodeInterface::STATUS_TEMPORARY_REDIRECT, ['Location' => '/api/sleep']);
 }
 
 #[Get('/sleep')]
