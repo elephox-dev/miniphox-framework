@@ -3,9 +3,9 @@
 TL;DR:
 
 ```bash
-composer create-project -s dev elephox/miniphox-template my-api && \
+composer create-project -s dev elephox/miniphox my-api && \
 cd my-api && \
-php public/server.php
+composer run serve
 ```
 
 Then:
@@ -110,7 +110,7 @@ Some things left TODO include:
 - [ ] regex patterns in route parameters
 - [ ] check how to improve performance even further (is it possible to leverage opcache?)
 - [ ] write up some tutorials on how to set up Doctrine and other common software stacks (phpdotenv using [Elephox/Configuration]?)
-- [ ] Improve the way server timings are logged (maybe also look into how to send headers while processing the request with ReactPHP)
+- [x] ~~Improve the way server timings are logged (maybe also look into how to send headers while processing the request with ReactPHP)~~
 - [ ] _MAYBE_: refactor Miniphox to be server-agnostic (exchange ReactPHP with other servers like OpenSwoole, Amphp?)
 
 [React HTTP server]: https://reactphp.org/http
