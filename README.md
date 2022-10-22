@@ -3,7 +3,7 @@
 TL;DR:
 
 ```bash
-composer create-project -s dev elephox/miniphox my-api && \
+composer create-project elephox/miniphox my-api && \
 cd my-api && \
 composer run serve
 ```
