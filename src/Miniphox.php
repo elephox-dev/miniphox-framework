@@ -67,6 +67,7 @@ class Miniphox
         $this->middlewares = [
             new LimitConcurrentRequestsMiddleware(100),
             new RequestBodyParserMiddleware(),
+            new RequestLoggerMiddleware($this->getLogger()),
         ];
     }
 
@@ -82,8 +83,6 @@ class Miniphox
 
     protected function cacheDeclaredRouteHandlers(): void
     {
-        $this->debug("Creating cache of route handlers from declared functions.");
-
         /** @noinspection PotentialMalwareInspection */
         $this->routeHandlerCache = Enumerable::from(get_defined_functions()['user'])
             ->where(fn(string $fn): bool => str_starts_with($fn, $this->appNamespace))
@@ -237,8 +236,6 @@ class Miniphox
 
     protected function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $routingTimer = -hrtime(true);
-
         $path = $request->getUri()->getPath();
         $routes = &$this->routeMap;
 
@@ -251,7 +248,7 @@ class Miniphox
                     ->where(fn(array $src, string $k) => str_starts_with($k, '[') && str_ends_with($k, ']'))
                     ->firstKeyOrDefault(null); // TODO: check if multiple dynamic routes exist and determine best fit
                 if ($dynamicPathPart === null) {
-                    return $this->handleNotFound($this->addPerformanceAttributes($request, $routingTimer));
+                    return $this->handleNotFound($request);
                 }
 
                 $routes = &$routes[$dynamicPathPart];
@@ -270,19 +267,18 @@ class Miniphox
 
         if (!isset($routes[self::METHODS_ROUTE_KEY])) {
             // no http handlers at this endpoint
-            return $this->handleNotFound($this->addPerformanceAttributes($request, $routingTimer));
+            return $this->handleNotFound($request);
         }
 
         $availableMethods = $routes[self::METHODS_ROUTE_KEY];
         $method = $request->getMethod();
         if (!isset($availableMethods[$method])) {
-            return $this->handleMethodNotAllowed($this->addPerformanceAttributes($request, $routingTimer));
+            return $this->handleMethodNotAllowed($request);
         }
 
         $callback = $availableMethods[$method];
 
         try {
-            $request = $this->addPerformanceAttributes($request, $routingTimer);
             $result = $this->services->callback($callback, ['request' => $request, ...$handlerArgs]);
 
             if (is_string($result)) {
@@ -297,9 +293,7 @@ class Miniphox
                 return $this->handleInternalServerError($request);
             }
 
-            $response = $this->addServerTimingHeaders($request, $response);
-
-            return $this->logResponse($request, $response);
+            return $response;
         } catch (Throwable $e) {
             $this->error($e);
 
@@ -309,79 +303,19 @@ class Miniphox
 
     protected function handleNotFound(ServerRequestInterface $request): ResponseInterface
     {
-        $response = Response::json("Requested resource not found: {$request->getRequestTarget()}")
+        return Response::json("Requested resource not found: {$request->getRequestTarget()}")
             ->withStatus(StatusCodeInterface::STATUS_NOT_FOUND);
-
-        $response = $this->addServerTimingHeaders($request, $response);
-
-        return $this->logResponse($request, $response);
     }
 
     protected function handleMethodNotAllowed(ServerRequestInterface $request): ResponseInterface
     {
-        $response = Response::json("Method {$request->getMethod()} not allowed at: {$request->getRequestTarget()}")
+        return Response::json("Method {$request->getMethod()} not allowed at: {$request->getRequestTarget()}")
             ->withStatus(StatusCodeInterface::STATUS_METHOD_NOT_ALLOWED);
-
-        $response = $this->addServerTimingHeaders($request, $response);
-
-        return $this->logResponse($request, $response);
     }
 
     protected function handleInternalServerError(ServerRequestInterface $request): ResponseInterface
     {
-        $response = Response::plaintext("Unable to handle request.")
+        return Response::plaintext("Unable to handle request.")
             ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
-
-        $response = $this->addServerTimingHeaders($request, $response);
-
-        return $this->logResponse($request, $response);
-    }
-
-    protected function addPerformanceAttributes(ServerRequestInterface $request, float $routingTimer): ServerRequestInterface
-    {
-        return $request
-            ->withAttribute('performance-timer-routing', ($routingTimer + hrtime(true)) / 1e+6)
-            ->withAttribute('performance-timer-handling', -hrtime(true));
-    }
-
-    protected function addServerTimingHeaders(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
-        $handlingTimer = $request->getAttribute('performance-timer-handling');
-        $handlingTime = ($handlingTimer + hrtime(true)) / 1e+6; // ns to ms
-
-        $routingTime = $request->getAttribute('performance-timer-routing');
-
-        return $response
-            ->withAddedHeader('Server-Timing', 'routing;desc="Request Routing";dur=' . $routingTime)
-            ->withAddedHeader('Server-Timing', 'request-handler;desc="Request Callback Handling";dur=' . $handlingTime);
-    }
-
-    protected function logResponse(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
-    {
-        $statusCode = $response->getStatusCode();
-        $statusColor = match (true) {
-            $statusCode < 300 => 'green',
-            $statusCode < 400 => 'yellow',
-            default => 'red',
-        };
-
-        $redirectInfo = '';
-        if ($statusCode > 299 && $statusCode < 400) {
-            $location = $response->getHeader('Location')[0];
-            $redirectInfo = " -> <blue>$location</blue>";
-        }
-
-        // TODO: ...this is ugly.
-        $routingTimingHeaderParts = explode(';', $response->getHeader('Server-Timing')[0]);
-        $routingTimingHeaderDur = (float)substr(end($routingTimingHeaderParts), 4);
-        $handlingTimingHeaderParts = explode(';', $response->getHeader('Server-Timing')[1]);
-        $handlingTimingHeaderDur = (float)substr(end($handlingTimingHeaderParts), 4);
-
-        $this->info(sprintf(
-            '<blue>%s</blue> -> <%s>%d</%2$s>%s <gray>[r:%.3fms; h:%.3fms]</gray>',
-            $request->getUri()->getPath(), $statusColor, $statusCode, $redirectInfo, $routingTimingHeaderDur, $handlingTimingHeaderDur
-        ));
-
-        return $response;
     }
 }
