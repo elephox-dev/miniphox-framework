@@ -4,31 +4,110 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "db8d998faa53d8c8243a693afb3cb4b7",
+    "content-hash": "daf97eb1aff0dd9441f27369a0e77769",
     "packages": [
         {
-            "name": "elephox/collection",
+            "name": "elephox/framework",
             "version": "dev-develop",
             "source": {
                 "type": "git",
-                "url": "https://github.com/elephox-dev/collection.git",
-                "reference": "83749967712a5cbc023acbc86865e7fd7f06d0d7"
+                "url": "https://github.com/elephox-dev/framework.git",
+                "reference": "8689a7cc19fcc4e7fc80496aea907a49246665d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elephox-dev/collection/zipball/83749967712a5cbc023acbc86865e7fd7f06d0d7",
-                "reference": "83749967712a5cbc023acbc86865e7fd7f06d0d7",
+                "url": "https://api.github.com/repos/elephox-dev/framework/zipball/8689a7cc19fcc4e7fc80496aea907a49246665d6",
+                "reference": "8689a7cc19fcc4e7fc80496aea907a49246665d6",
                 "shasum": ""
             },
             "require": {
+                "elephox/mimey": "^4.0",
+                "ext-ctype": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
                 "jetbrains/phpstorm-attributes": "^1.0",
-                "php": "^8.1 <8.3"
+                "php": "^8.1 <8.3",
+                "psr/cache": "^3.0",
+                "psr/container": "^2.0",
+                "psr/log": "^3.0",
+                "ricardoboss/php-console-logger": "^2.1",
+                "stella-maris/clock": "^0.1",
+                "symfony/process": "^6.0",
+                "vlucas/phpdotenv": "^5.4"
+            },
+            "provide": {
+                "psr/cache-implementation": "3.0",
+                "psr/clock-implementation": "1.0",
+                "psr/container-implementation": "2.0",
+                "psr/log-implementation": "3.0"
+            },
+            "replace": {
+                "elephox/autoloading": "self.version",
+                "elephox/cache": "self.version",
+                "elephox/clock": "self.version",
+                "elephox/collection": "self.version",
+                "elephox/configuration": "self.version",
+                "elephox/console": "self.version",
+                "elephox/di": "self.version",
+                "elephox/events": "self.version",
+                "elephox/files": "self.version",
+                "elephox/http": "self.version",
+                "elephox/logging": "self.version",
+                "elephox/oor": "self.version",
+                "elephox/stream": "self.version",
+                "elephox/support": "self.version",
+                "elephox/web": "self.version"
+            },
+            "require-dev": {
+                "doctrine/orm": "^2.11",
+                "elephox/builder-whoops-handler": "dev-develop",
+                "elephox/builder-whoops-middleware": "dev-develop",
+                "elephox/composer-module-sync": "^1.5",
+                "ergebnis/composer-normalize": "dev-main",
+                "friendsofphp/php-cs-fixer": "dev-master",
+                "infection/infection": "^0.26",
+                "mockery/mockery": "^1.5",
+                "nunomaduro/collision": "^6.2",
+                "phpbench/phpbench": "^1.2",
+                "phpunit/phpunit": "^9.5",
+                "psalm/plugin-phpunit": "^0.16",
+                "roave/no-leaks": "^1.3",
+                "vimeo/psalm": "dev-master"
+            },
+            "suggest": {
+                "ext-fileinfo": "To get the mime type of a file"
             },
             "default-branch": true,
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-develop": "0.7.x-dev",
+                    "release/0.3": "0.3.x-dev",
+                    "release/0.4": "0.4.x-dev",
+                    "release/0.5": "0.5.x-dev",
+                    "release/0.6": "0.6.x-dev"
+                },
+                "module-sync": {
+                    "repository-base": "https://github.com/elephox-dev/"
+                }
+            },
             "autoload": {
                 "psr-4": {
-                    "Elephox\\Collection\\": "src/"
+                    "Elephox\\DI\\": "modules/DI/src/",
+                    "Elephox\\OOR\\": "modules/OOR/src/",
+                    "Elephox\\Web\\": "modules/Web/src/",
+                    "Elephox\\Http\\": "modules/Http/src/",
+                    "Elephox\\Cache\\": "modules/Cache/src/",
+                    "Elephox\\Clock\\": "modules/Clock/src/",
+                    "Elephox\\Files\\": "modules/Files/src/",
+                    "Elephox\\Events\\": "modules/Events/src/",
+                    "Elephox\\Stream\\": "modules/Stream/src/",
+                    "Elephox\\Console\\": "modules/Console/src/",
+                    "Elephox\\Logging\\": "modules/Logging/src/",
+                    "Elephox\\Support\\": "modules/Support/src/",
+                    "Elephox\\Collection\\": "modules/Collection/src/",
+                    "Elephox\\Autoloading\\": "modules/Autoloading/src/",
+                    "Elephox\\Configuration\\": "modules/Configuration/src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -41,7 +120,8 @@
                     "email": "contact@ricardoboss.de"
                 }
             ],
-            "description": "Elephox collection library.",
+            "description": "A type-safe PHP framework.",
+            "homepage": "https://elephox.dev",
             "support": {
                 "issues": "https://github.com/elephox-dev/framework/issues",
                 "source": "https://github.com/elephox-dev/framework"
@@ -49,33 +129,36 @@
             "time": "2022-10-06T21:46:59+00:00"
         },
         {
-            "name": "elephox/di",
-            "version": "dev-develop",
+            "name": "elephox/mimey",
+            "version": "4.0.2",
             "source": {
                 "type": "git",
-                "url": "https://github.com/elephox-dev/di.git",
-                "reference": "a5183b6a3edde2bbf387cf7b483d6041b0394b06"
+                "url": "https://github.com/elephox-dev/mimey.git",
+                "reference": "8001940bf233d02a7f7fb264d02aa1b25d7ded71"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elephox-dev/di/zipball/a5183b6a3edde2bbf387cf7b483d6041b0394b06",
-                "reference": "a5183b6a3edde2bbf387cf7b483d6041b0394b06",
+                "url": "https://api.github.com/repos/elephox-dev/mimey/zipball/8001940bf233d02a7f7fb264d02aa1b25d7ded71",
+                "reference": "8001940bf233d02a7f7fb264d02aa1b25d7ded71",
                 "shasum": ""
             },
             "require": {
-                "elephox/collection": "dev-develop",
                 "jetbrains/phpstorm-attributes": "^1.0",
-                "php": "^8.1 <8.3",
-                "psr/container": "^2.0"
+                "php": "^8.1 <8.3"
             },
-            "provide": {
-                "psr/container-implementation": "2.0"
+            "require-dev": {
+                "phpunit/phpunit": "^9.5"
             },
-            "default-branch": true,
+            "suggest": {
+                "ext-mbstring": "For non-English (user) input parsing"
+            },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Elephox\\DI\\": "src/"
+                    "Elephox\\Mimey\\": [
+                        "src/",
+                        "dist/"
+                    ]
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -84,63 +167,19 @@
             ],
             "authors": [
                 {
-                    "name": "Ricaro Boss",
-                    "email": "contact@ricardoboss.de"
-                }
-            ],
-            "description": "Elephox dependency injection library.",
-            "support": {
-                "issues": "https://github.com/elephox-dev/framework/issues",
-                "source": "https://github.com/elephox-dev/framework"
-            },
-            "time": "2022-10-17T22:35:14+00:00"
-        },
-        {
-            "name": "elephox/logging",
-            "version": "dev-develop",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/elephox-dev/logging.git",
-                "reference": "d5c29e2d05933be223cf8efee4939a83fbbe2199"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/elephox-dev/logging/zipball/d5c29e2d05933be223cf8efee4939a83fbbe2199",
-                "reference": "d5c29e2d05933be223cf8efee4939a83fbbe2199",
-                "shasum": ""
-            },
-            "require": {
-                "jetbrains/phpstorm-attributes": "^1.0",
-                "php": "^8.1 <8.3",
-                "psr/log": "^3.0",
-                "ricardoboss/php-console-logger": "^2.1"
-            },
-            "provide": {
-                "psr/log-implementation": "3.0"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Elephox\\Logging\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
+                    "name": "Ralph Khattar",
+                    "email": "ralph.khattar@gmail.com"
+                },
                 {
-                    "name": "Ricaro Boss",
+                    "name": "Ricardo Boss",
                     "email": "contact@ricardoboss.de"
                 }
             ],
-            "description": "Elephox Logging library.",
+            "description": "PHP package for converting file extensions to MIME types and vice versa.",
             "support": {
-                "issues": "https://github.com/elephox-dev/framework/issues",
-                "source": "https://github.com/elephox-dev/framework"
+                "source": "https://github.com/elephox-dev/mimey/tree/4.0.2"
             },
-            "time": "2022-07-03T13:19:50+00:00"
+            "time": "2022-07-19T21:21:41+00:00"
         },
         {
             "name": "evenement/evenement",
@@ -246,6 +285,68 @@
             "time": "2020-11-24T22:02:12+00:00"
         },
         {
+            "name": "graham-campbell/result-type",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/GrahamCampbell/Result-Type.git",
+                "reference": "a878d45c1914464426dc94da61c9e1d36ae262a8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/GrahamCampbell/Result-Type/zipball/a878d45c1914464426dc94da61c9e1d36ae262a8",
+                "reference": "a878d45c1914464426dc94da61c9e1d36ae262a8",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2.5 || ^8.0",
+                "phpoption/phpoption": "^1.9"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.5.28 || ^9.5.21"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GrahamCampbell\\ResultType\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Graham Campbell",
+                    "email": "hello@gjcampbell.co.uk",
+                    "homepage": "https://github.com/GrahamCampbell"
+                }
+            ],
+            "description": "An Implementation Of The Result Type",
+            "keywords": [
+                "Graham Campbell",
+                "GrahamCampbell",
+                "Result Type",
+                "Result-Type",
+                "result"
+            ],
+            "support": {
+                "issues": "https://github.com/GrahamCampbell/Result-Type/issues",
+                "source": "https://github.com/GrahamCampbell/Result-Type/tree/v1.1.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/GrahamCampbell",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/graham-campbell/result-type",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-07-30T15:56:11+00:00"
+        },
+        {
             "name": "jetbrains/phpstorm-attributes",
             "version": "1.0",
             "source": {
@@ -286,6 +387,130 @@
                 "source": "https://github.com/JetBrains/phpstorm-attributes/tree/1.0"
             },
             "time": "2020-11-17T11:09:47+00:00"
+        },
+        {
+            "name": "phpoption/phpoption",
+            "version": "1.9.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/schmittjoh/php-option.git",
+                "reference": "dc5ff11e274a90cc1c743f66c9ad700ce50db9ab"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/schmittjoh/php-option/zipball/dc5ff11e274a90cc1c743f66c9ad700ce50db9ab",
+                "reference": "dc5ff11e274a90cc1c743f66c9ad700ce50db9ab",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2.5 || ^8.0"
+            },
+            "require-dev": {
+                "bamarni/composer-bin-plugin": "^1.8",
+                "phpunit/phpunit": "^8.5.28 || ^9.5.21"
+            },
+            "type": "library",
+            "extra": {
+                "bamarni-bin": {
+                    "bin-links": true,
+                    "forward-command": true
+                },
+                "branch-alias": {
+                    "dev-master": "1.9-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PhpOption\\": "src/PhpOption/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Johannes M. Schmitt",
+                    "email": "schmittjoh@gmail.com",
+                    "homepage": "https://github.com/schmittjoh"
+                },
+                {
+                    "name": "Graham Campbell",
+                    "email": "hello@gjcampbell.co.uk",
+                    "homepage": "https://github.com/GrahamCampbell"
+                }
+            ],
+            "description": "Option Type for PHP",
+            "keywords": [
+                "language",
+                "option",
+                "php",
+                "type"
+            ],
+            "support": {
+                "issues": "https://github.com/schmittjoh/php-option/issues",
+                "source": "https://github.com/schmittjoh/php-option/tree/1.9.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/GrahamCampbell",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/phpoption/phpoption",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-07-30T15:51:26+00:00"
+        },
+        {
+            "name": "psr/cache",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/cache.git",
+                "reference": "aa5030cfa5405eccfdcb1083ce040c2cb8d253bf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/cache/zipball/aa5030cfa5405eccfdcb1083ce040c2cb8d253bf",
+                "reference": "aa5030cfa5405eccfdcb1083ce040c2cb8d253bf",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Cache\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for caching libraries",
+            "keywords": [
+                "cache",
+                "psr",
+                "psr-6"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/cache/tree/3.0.0"
+            },
+            "time": "2021-02-03T23:26:27+00:00"
         },
         {
             "name": "psr/container",
@@ -1183,16 +1408,16 @@
         },
         {
             "name": "ricardoboss/php-console-logger",
-            "version": "v2.3.0",
+            "version": "v2.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ricardoboss/php-console-logger.git",
-                "reference": "eae7df9654a3509994f5d5a0afdc04fd83dcdb6d"
+                "reference": "8447823ef193900c76871a64ac554f69928f63bc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ricardoboss/php-console-logger/zipball/eae7df9654a3509994f5d5a0afdc04fd83dcdb6d",
-                "reference": "eae7df9654a3509994f5d5a0afdc04fd83dcdb6d",
+                "url": "https://api.github.com/repos/ricardoboss/php-console-logger/zipball/8447823ef193900c76871a64ac554f69928f63bc",
+                "reference": "8447823ef193900c76871a64ac554f69928f63bc",
                 "shasum": ""
             },
             "require": {
@@ -1218,9 +1443,9 @@
             "description": "A simple console logger for scripts or small applications.",
             "support": {
                 "issues": "https://github.com/ricardoboss/php-console-logger/issues",
-                "source": "https://github.com/ricardoboss/php-console-logger/tree/v2.3.0"
+                "source": "https://github.com/ricardoboss/php-console-logger/tree/v2.3.1"
             },
-            "time": "2022-10-20T19:25:38+00:00"
+            "time": "2022-10-20T19:47:09+00:00"
         },
         {
             "name": "ringcentral/psr7",
@@ -1282,16 +1507,452 @@
                 "source": "https://github.com/ringcentral/psr7/tree/master"
             },
             "time": "2018-05-29T20:21:04+00:00"
+        },
+        {
+            "name": "stella-maris/clock",
+            "version": "0.1.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/stella-maris-solutions/clock.git",
+                "reference": "a94228dac03c9a8411198ce8c8dacbbe99c930c3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/stella-maris-solutions/clock/zipball/a94228dac03c9a8411198ce8c8dacbbe99c930c3",
+                "reference": "a94228dac03c9a8411198ce8c8dacbbe99c930c3",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0|^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "StellaMaris\\Clock\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Andreas Heigl",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "A pre-release of the proposed PSR-20 Clock-Interface",
+            "homepage": "https://gitlab.com/stella-maris/clock",
+            "keywords": [
+                "clock",
+                "datetime",
+                "point in time",
+                "psr20"
+            ],
+            "support": {
+                "issues": "https://github.com/stella-maris-solutions/clock/issues",
+                "source": "https://github.com/stella-maris-solutions/clock/tree/0.1.6"
+            },
+            "time": "2022-09-27T15:03:11+00:00"
+        },
+        {
+            "name": "symfony/polyfill-ctype",
+            "version": "v1.26.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-ctype.git",
+                "reference": "6fd1b9a79f6e3cf65f9e679b23af304cd9e010d4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/6fd1b9a79f6e3cf65f9e679b23af304cd9e010d4",
+                "reference": "6fd1b9a79f6e3cf65f9e679b23af304cd9e010d4",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "provide": {
+                "ext-ctype": "*"
+            },
+            "suggest": {
+                "ext-ctype": "For best performance"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.26-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Ctype\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Gert de Pagter",
+                    "email": "BackEndTea@gmail.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill for ctype functions",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "ctype",
+                "polyfill",
+                "portable"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.26.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-05-24T11:49:31+00:00"
+        },
+        {
+            "name": "symfony/polyfill-mbstring",
+            "version": "v1.26.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-mbstring.git",
+                "reference": "9344f9cb97f3b19424af1a21a3b0e75b0a7d8d7e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/9344f9cb97f3b19424af1a21a3b0e75b0a7d8d7e",
+                "reference": "9344f9cb97f3b19424af1a21a3b0e75b0a7d8d7e",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "provide": {
+                "ext-mbstring": "*"
+            },
+            "suggest": {
+                "ext-mbstring": "For best performance"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.26-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Mbstring\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill for the Mbstring extension",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "mbstring",
+                "polyfill",
+                "portable",
+                "shim"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.26.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-05-24T11:49:31+00:00"
+        },
+        {
+            "name": "symfony/polyfill-php80",
+            "version": "v1.26.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php80.git",
+                "reference": "cfa0ae98841b9e461207c13ab093d76b0fa7bace"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/cfa0ae98841b9e461207c13ab093d76b0fa7bace",
+                "reference": "cfa0ae98841b9e461207c13ab093d76b0fa7bace",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.1"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.26-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Php80\\": ""
+                },
+                "classmap": [
+                    "Resources/stubs"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ion Bazan",
+                    "email": "ion.bazan@gmail.com"
+                },
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill backporting some PHP 8.0+ features to lower PHP versions",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "polyfill",
+                "portable",
+                "shim"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.26.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-05-10T07:21:04+00:00"
+        },
+        {
+            "name": "symfony/process",
+            "version": "v6.1.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/process.git",
+                "reference": "a6506e99cfad7059b1ab5cab395854a0a0c21292"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/process/zipball/a6506e99cfad7059b1ab5cab395854a0a0c21292",
+                "reference": "a6506e99cfad7059b1ab5cab395854a0a0c21292",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Process\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Executes commands in sub-processes",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/process/tree/v6.1.3"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-06-27T17:24:16+00:00"
+        },
+        {
+            "name": "vlucas/phpdotenv",
+            "version": "v5.5.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/vlucas/phpdotenv.git",
+                "reference": "1a7ea2afc49c3ee6d87061f5a233e3a035d0eae7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/vlucas/phpdotenv/zipball/1a7ea2afc49c3ee6d87061f5a233e3a035d0eae7",
+                "reference": "1a7ea2afc49c3ee6d87061f5a233e3a035d0eae7",
+                "shasum": ""
+            },
+            "require": {
+                "ext-pcre": "*",
+                "graham-campbell/result-type": "^1.0.2",
+                "php": "^7.1.3 || ^8.0",
+                "phpoption/phpoption": "^1.8",
+                "symfony/polyfill-ctype": "^1.23",
+                "symfony/polyfill-mbstring": "^1.23.1",
+                "symfony/polyfill-php80": "^1.23.1"
+            },
+            "require-dev": {
+                "bamarni/composer-bin-plugin": "^1.4.1",
+                "ext-filter": "*",
+                "phpunit/phpunit": "^7.5.20 || ^8.5.30 || ^9.5.25"
+            },
+            "suggest": {
+                "ext-filter": "Required to use the boolean validator."
+            },
+            "type": "library",
+            "extra": {
+                "bamarni-bin": {
+                    "bin-links": true,
+                    "forward-command": true
+                },
+                "branch-alias": {
+                    "dev-master": "5.5-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Dotenv\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Graham Campbell",
+                    "email": "hello@gjcampbell.co.uk",
+                    "homepage": "https://github.com/GrahamCampbell"
+                },
+                {
+                    "name": "Vance Lucas",
+                    "email": "vance@vancelucas.com",
+                    "homepage": "https://github.com/vlucas"
+                }
+            ],
+            "description": "Loads environment variables from `.env` to `getenv()`, `$_ENV` and `$_SERVER` automagically.",
+            "keywords": [
+                "dotenv",
+                "env",
+                "environment"
+            ],
+            "support": {
+                "issues": "https://github.com/vlucas/phpdotenv/issues",
+                "source": "https://github.com/vlucas/phpdotenv/tree/v5.5.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/GrahamCampbell",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/vlucas/phpdotenv",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-10-16T01:01:54+00:00"
         }
     ],
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {
-        "elephox/collection": 20,
-        "elephox/di": 20,
-        "elephox/logging": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
