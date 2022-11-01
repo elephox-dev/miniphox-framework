@@ -15,12 +15,6 @@
     "react/http": "^1.8",
     "ricardoboss/php-console-logger": "^2.3"
   },
-  "repositories": [
-    {
-      "type": "git",
-      "url": "https://github.com/elephox-dev/framework.git"
-    }
-  ],
   "minimum-stability": "dev",
   "prefer-stable": true,
   "autoload": {
