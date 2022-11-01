@@ -3,16 +3,20 @@ declare(strict_types=1);
 
 namespace Elephox\Miniphox;
 
-
+use Elephox\DI\Contract\ServiceCollection;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 
 class RequestLoggerMiddleware {
     public function __construct(
-        private readonly LoggerInterface $logger,
+        private readonly ServiceCollection $services,
     )
     {
+    }
+
+    private function getLogger(): LoggerInterface {
+        return $this->services->requireService(LoggerInterface::class);
     }
 
     public function __invoke(ServerRequestInterface $request, $next): ResponseInterface
@@ -37,7 +41,7 @@ class RequestLoggerMiddleware {
 
         $message = $this->formatMessage($statusCode, $path, $location, $processingTimeSeconds ?? null);
 
-        $this->logger->info($message);
+        $this->getLogger()->info($message);
     }
 
     private function formatMessage(int $statusCode, string $path, ?string $location, ?float $processingTimeSeconds): string
