@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "de8a1fe7fdae39559b54406bb98ee48d",
+    "content-hash": "625e22fdf8f4c5221f7605fdb0e1d571",
     "packages": [
         {
             "name": "elephox/framework",
@@ -12,13 +12,7 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/elephox-dev/framework.git",
-                "reference": "8032be65f7e1c87f0a425f1fa2bb2688db3eb2af"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/elephox-dev/framework/zipball/8032be65f7e1c87f0a425f1fa2bb2688db3eb2af",
-                "reference": "8032be65f7e1c87f0a425f1fa2bb2688db3eb2af",
-                "shasum": ""
+                "reference": "d367696717cc87fa75bf8a7bb4cad74150bda985"
             },
             "require": {
                 "elephox/mimey": "^4.0",
@@ -93,28 +87,142 @@
                 }
             },
             "autoload": {
-                "files": [
-                    "modules/OOR/shortcuts.php"
-                ],
                 "psr-4": {
-                    "Elephox\\DI\\": "modules/DI/src/",
-                    "Elephox\\OOR\\": "modules/OOR/src/",
-                    "Elephox\\Web\\": "modules/Web/src/",
-                    "Elephox\\Http\\": "modules/Http/src/",
+                    "Elephox\\Autoloading\\": "modules/Autoloading/src/",
                     "Elephox\\Cache\\": "modules/Cache/src/",
                     "Elephox\\Clock\\": "modules/Clock/src/",
-                    "Elephox\\Files\\": "modules/Files/src/",
-                    "Elephox\\Events\\": "modules/Events/src/",
-                    "Elephox\\Stream\\": "modules/Stream/src/",
-                    "Elephox\\Console\\": "modules/Console/src/",
-                    "Elephox\\Logging\\": "modules/Logging/src/",
-                    "Elephox\\Support\\": "modules/Support/src/",
                     "Elephox\\Collection\\": "modules/Collection/src/",
-                    "Elephox\\Autoloading\\": "modules/Autoloading/src/",
-                    "Elephox\\Configuration\\": "modules/Configuration/src/"
+                    "Elephox\\Configuration\\": "modules/Configuration/src/",
+                    "Elephox\\Console\\": "modules/Console/src/",
+                    "Elephox\\DI\\": "modules/DI/src/",
+                    "Elephox\\Events\\": "modules/Events/src/",
+                    "Elephox\\Files\\": "modules/Files/src/",
+                    "Elephox\\Http\\": "modules/Http/src/",
+                    "Elephox\\Logging\\": "modules/Logging/src/",
+                    "Elephox\\OOR\\": "modules/OOR/src/",
+                    "Elephox\\Stream\\": "modules/Stream/src/",
+                    "Elephox\\Support\\": "modules/Support/src/",
+                    "Elephox\\Web\\": "modules/Web/src/"
+                },
+                "files": [
+                    "modules/OOR/shortcuts.php"
+                ]
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Elephox\\Autoloading\\": "modules/Autoloading/test/",
+                    "Elephox\\Cache\\": "modules/Cache/test/",
+                    "Elephox\\Clock\\": "modules/Clock/test/",
+                    "Elephox\\Collection\\": "modules/Collection/test/",
+                    "Elephox\\Configuration\\": "modules/Configuration/test/",
+                    "Elephox\\Console\\": "modules/Console/test/",
+                    "Elephox\\DI\\": "modules/DI/test/",
+                    "Elephox\\Events\\": "modules/Events/test/",
+                    "Elephox\\Files\\": "modules/Files/test/",
+                    "Elephox\\Http\\": "modules/Http/test/",
+                    "Elephox\\Logging\\": "modules/Logging/test/",
+                    "Elephox\\OOR\\": "modules/OOR/test/",
+                    "Elephox\\Stream\\": "modules/Stream/test/",
+                    "Elephox\\Support\\": "modules/Support/test/",
+                    "Elephox\\Web\\": "modules/Web/test/",
+                    "Elephox\\Development\\": "development/src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "scripts": {
+                "benchmark": [
+                    "@putenv XDEBUG_MODE=off",
+                    "phpbench run --report=overview --ref=baseline --retry-threshold=5 --iterations=10"
+                ],
+                "check-dependencies": [
+                    "@putenv XDEBUG_MODE=off",
+                    "@composer modules:check --namespaces"
+                ],
+                "ci:check-dependencies": [
+                    "@putenv XDEBUG_MODE=off",
+                    "@composer modules:check --namespaces"
+                ],
+                "ci:memory-leak-test": [
+                    "@putenv XDEBUG_MODE=coverage",
+                    "roave-no-leaks --configuration=phpunit.xml.dist --no-interaction"
+                ],
+                "ci:mutation-test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "@putenv XDEBUG_MODE=coverage",
+                    "infection --coverage=build/coverage --skip-initial-tests --logger-github --no-interaction"
+                ],
+                "ci:mutation-test:autoscale": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "@putenv XDEBUG_MODE=coverage",
+                    "infection --coverage=build/coverage --skip-initial-tests --logger-github --no-interaction -j$(nproc)"
+                ],
+                "ci:normalize-composer": [
+                    "@putenv XDEBUG_MODE=off",
+                    "@composer modules:normalize"
+                ],
+                "ci:publish-coverage": [
+                    "@putenv XDEBUG_MODE=off",
+                    "php-coveralls -x build/coverage/clover.xml -o build/coverage/coveralls-upload.json -v"
+                ],
+                "ci:static-analysis": [
+                    "@putenv XDEBUG_MODE=off",
+                    "psalm --no-cache --output-format=github --long-progress"
+                ],
+                "ci:static-analysis:publish": [
+                    "@putenv XDEBUG_MODE=off",
+                    "psalm --no-cache --output-format=github --long-progress --shepherd"
+                ],
+                "ci:unit-test": [
+                    "@putenv XDEBUG_MODE=coverage",
+                    "phpunit --configuration=phpunit.xml.dist --testsuite=full --no-interaction --coverage-xml=build/coverage/coverage-xml --log-junit=build/coverage/junit.xml --coverage-clover=build/coverage/clover.xml --coverage-html=build/coverage/html"
+                ],
+                "fix-cs": [
+                    "@putenv XDEBUG_MODE=off",
+                    "php-cs-fixer fix"
+                ],
+                "fix-cs:dry-run": [
+                    "@putenv XDEBUG_MODE=off",
+                    "php-cs-fixer fix --dry-run --diff"
+                ],
+                "local-ci": [
+                    "@composer validate --no-interaction --strict",
+                    "@composer install --no-interaction --no-scripts --ignore-platform-req=php+",
+                    "@update-readme",
+                    "@composer modules:normalize",
+                    "@fix-cs:dry-run",
+                    "@check-dependencies",
+                    "@static-analysis",
+                    "@unit-test"
+                ],
+                "memory-leak-test": [
+                    "@putenv XDEBUG_MODE=coverage",
+                    "roave-no-leaks --configuration=phpunit.xml.dist --no-interaction"
+                ],
+                "mutation-test": [
+                    "Composer\\Config::disableProcessTimeout",
+                    "@putenv XDEBUG_MODE=coverage",
+                    "infection --show-mutations"
+                ],
+                "static-analysis": [
+                    "@putenv XDEBUG_MODE=off",
+                    "psalm --no-cache"
+                ],
+                "unit-test": [
+                    "@putenv XDEBUG_MODE=coverage",
+                    "phpunit --configuration=phpunit.xml.dist --testsuite=full"
+                ],
+                "update-benchmark-baseline": [
+                    "@putenv XDEBUG_MODE=off",
+                    "phpbench run --tag=baseline --retry-threshold=5 --iterations=10 --dump-file=baselines/benchmark.baseline.xml"
+                ],
+                "update-readme": [
+                    "@putenv XDEBUG_MODE=off",
+                    "@php development/bin/update-readme-annotations"
+                ],
+                "update-static-analysis-baseline": [
+                    "@putenv XDEBUG_MODE=off",
+                    "psalm --no-cache --long-progress --set-baseline=development/psalm.baseline.xml"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -130,7 +238,7 @@
                 "issues": "https://github.com/elephox-dev/framework/issues",
                 "source": "https://github.com/elephox-dev/framework"
             },
-            "time": "2022-11-01T10:55:56+00:00"
+            "time": "2022-11-01T11:33:48+00:00"
         },
         {
             "name": "elephox/mimey",

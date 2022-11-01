@@ -6,7 +6,9 @@ namespace Elephox\Miniphox;
 use Closure;
 use Elephox\Collection\KeyedEnumerable;
 use Elephox\DI\Contract\ServiceCollection;
+use Elephox\Http\RequestMethod;
 use Elephox\Miniphox\Attributes\HttpMethodAttribute;
+use Elephox\Web\Routing\Attribute\Contract\RouteAttribute;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -62,7 +64,7 @@ class Minirouter
 
     protected function registerFunction(string $basePath, ReflectionFunction $functionReflection, LoggerInterface $logger): void
     {
-        $attributes = $functionReflection->getAttributes(HttpMethodAttribute::class, ReflectionAttribute::IS_INSTANCEOF);
+        $attributes = $functionReflection->getAttributes(RouteAttribute::class, ReflectionAttribute::IS_INSTANCEOF);
 
         if (empty($attributes)) {
             $logger->info("Function <green>{$functionReflection->getName()}</green> was mounted but has no HTTP method attributes.");
@@ -73,16 +75,19 @@ class Minirouter
         foreach ($attributes as $attribute) {
             $attributeInstance = $attribute->newInstance();
 
-            assert($attributeInstance instanceof HttpMethodAttribute);
+            assert($attributeInstance instanceof RouteAttribute);
 
-            $attributePath = '/' . $attributeInstance->path;
+            $attributePath = '/' . $attributeInstance->getPath();
             $path = $basePath . $attributePath;
-            $verb = $attributeInstance->verb;
+            $verbs = $attributeInstance->getRequestMethods();
             $closure = $functionReflection->getClosure();
 
-            $success = $this->setVerbHandler($path, $verb, $closure, false, $logger);
-            if (!$success) {
-                $logger->warning("Handler for <magenta>$verb</magenta> <blue>$path</blue> already exists. Skipping.");
+            /** @var RequestMethod $verb */
+            foreach ($verbs as $verb) {
+                $success = $this->setVerbHandler($path, $verb->name, $closure, false, $logger);
+                if (!$success) {
+                    $logger->warning("Handler for <magenta>$verb->name</magenta> <blue>$path</blue> already exists. Skipping.");
+                }
             }
         }
     }

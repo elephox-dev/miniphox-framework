@@ -5,12 +5,10 @@ namespace App;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-use Elephox\Miniphox\Attributes\Get;
 use Elephox\Miniphox\Miniphox;
+use Elephox\Web\Routing\Attribute\Http\Get;
 use Fig\Http\Message\StatusCodeInterface;
-use Psr\Http\Message\ResponseInterface;
 use React\Http\Message\Response;
-use stdClass;
 
 #[Get('/redirect')]
 function redirect(): Response
