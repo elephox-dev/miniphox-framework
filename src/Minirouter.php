@@ -7,7 +7,6 @@ use Closure;
 use Elephox\Collection\KeyedEnumerable;
 use Elephox\DI\Contract\ServiceCollection;
 use Elephox\Http\RequestMethod;
-use Elephox\Miniphox\Attributes\HttpMethodAttribute;
 use Elephox\Web\Routing\Attribute\Contract\RouteAttribute;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -127,7 +126,7 @@ class Minirouter
     public function printRoutingTable(LoggerInterface $logger): void
     {
         $logger->info("All available routes:");
-        $table = [['Methods', 'Route']];
+        $table = [];
         $flattenMap = static function (array $map, array $path, callable $self) use (&$table): void {
             foreach ($map as $part => $row) {
                 if ($part === self::METHODS_ROUTE_KEY && !empty($row)) {
@@ -145,7 +144,7 @@ class Minirouter
 
         $flattenMap($this->routeMap, [''], $flattenMap);
 
-        foreach (Console::table($table, compact: true) as $line) {
+        foreach (Console::table($table, compact: true, headers: ['Methods', 'Route']) as $line) {
             $logger->info($line);
         }
     }
