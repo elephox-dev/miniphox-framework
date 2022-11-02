@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Elephox\Miniphox;
 
-use Closure;
-use Elephox\Collection\Enumerable;
-use Elephox\Collection\KeyedEnumerable;
 use Elephox\DI\Contract\ServiceCollection;
 use Elephox\DI\ServiceCollection as ServiceCollectionImpl;
+use Elephox\Files\Contract\FileChangedEvent;
+use Elephox\Files\File;
+use Elephox\Files\FileWatcher;
 use Elephox\Logging\EnhancedMessageSink;
 use Elephox\Logging\LogLevelProxy;
 use Elephox\Logging\SimpleFormatColorSink;
@@ -24,11 +24,12 @@ use React\Http\Message\Response;
 use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
 use React\Http\Middleware\RequestBodyParserMiddleware;
 use React\Socket\SocketServer;
-use ReflectionAttribute;
-use ReflectionException;
-use ReflectionFunction;
-use ricardoboss\Console;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use SplFileInfo;
 use Stringable;
+use Symfony\Component\Process\PhpExecutableFinder;
+use Symfony\Component\Process\Process;
 use Throwable;
 
 class Miniphox implements LoggerAwareInterface
@@ -97,19 +98,88 @@ class Miniphox implements LoggerAwareInterface
 
     public function run(string $uri = 'tcp://0.0.0.0:8008'): never
     {
-        $this->getRouter()->printRoutingTable($this->getLogger());
+        global $argv;
 
-        $socket = new SocketServer($uri);
+        if (in_array('--no-watch', $argv, true)) {
+            $this->getRouter()->printRoutingTable($this->getLogger());
 
-        $socket->on('error', fn(Throwable $error) => $this->error($error));
+            $httpUri = str_replace(['tcp', '0.0.0.0'], ['http', 'localhost'], $uri);
+            $this->info("Running HTTP server at <blue><underline>$httpUri</underline></blue>");
 
-        $httpUri = str_replace(['tcp', '0.0.0.0'], ['http', 'localhost'], $uri);
-        $this->info("Running HTTP server at <blue><underline>$httpUri</underline></blue>");
+            $socket = new SocketServer($uri);
+            $socket->on('error', fn(Throwable $error) => $this->error($error));
 
-        $http = new HttpServer(...[...$this->middlewares, $this->handle(...)]);
+            $http = new HttpServer(...[...$this->middlewares, $this->handle(...)]);
+            $http->on('error', fn(Throwable $error) => $this->error($error));
+            $http->listen($socket);
+        } else {
+            $process = null;
+            $runPhpServerProcess = function () use (&$process, $argv) {
+                $process = new Process([(new PhpExecutableFinder())->find(false), $argv[0], '--no-watch']);
 
-        $http->on('error', fn(Throwable $error) => $this->error($error));
-        $http->listen($socket);
+                /** @psalm-suppress UnusedClosureParam */
+                $process->start(function (string $type, string $buffer): void {
+                    $buffer = trim($buffer);
+                    foreach (explode("\n", $buffer) as $line) {
+                        // timestamp
+                        if ($closingBracketPos = strpos($line, ']')) {
+                            $line = substr($line, $closingBracketPos + 2);
+                        }
+
+                        // log level
+                        if ($closingBracketPos = strpos($line, ']')) {
+                            $line = substr($line, $closingBracketPos + 2);
+                        }
+
+                        $this->info($line);
+                    }
+                });
+
+                $this->info('Server process started', ['pid' => $process->getPid()]);
+            };
+
+            $onFileChanged = function (FileChangedEvent $e) use (&$process, $runPhpServerProcess) {
+                $this->debug(sprintf("File %s changed. Restarting server...", $e->file()->path()));
+
+                $process?->stop();
+
+                // wait for process to end
+                usleep(1000_000);
+
+                $runPhpServerProcess();
+            };
+
+            $files = [];
+
+            foreach (['src', 'public'] as $dir) {
+                array_push(
+                    $files,
+                    ...collect(...(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(getcwd() . DIRECTORY_SEPARATOR . $dir))))
+                        ->where(fn(SplFileInfo $fileInfo) => $fileInfo->isFile())
+                        ->select(fn(SplFileInfo $fileInfo) => new File($fileInfo->getRealPath()))
+                        ->toArray(),
+                );
+            }
+
+            $this->info(sprintf("Watching %d file%s...", count($files), count($files) === 1 ? '' : 's'));
+
+            $watcher = new FileWatcher();
+            $watcher->add(
+                $onFileChanged,
+                ...$files,
+            );
+            $watcher->poll(false);
+
+            $runPhpServerProcess();
+
+            while ($process->isRunning()) {
+                $watcher->poll();
+
+                usleep(1000_000);
+            }
+
+            $this->warning(sprintf('Server process exited with code %s', $process->getExitCode() ?? '<unknown>'));
+        }
 
         exit;
     }
