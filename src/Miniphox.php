@@ -13,7 +13,6 @@ use Elephox\Logging\LogLevelProxy;
 use Elephox\Logging\SimpleFormatColorSink;
 use Elephox\Logging\SingleSinkLogger;
 use Elephox\Logging\StandardSink;
-use Elephox\Miniphox\Attributes\HttpMethodAttribute;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -46,11 +45,6 @@ class Miniphox implements LoggerAwareInterface
     protected static function normalizeAppNamespace(string $namespace): string
     {
         return strtolower(trim($namespace, '\\')) . '\\';
-    }
-
-    protected static function normalizePathPart(string $part): string
-    {
-        return trim($part, '/');
     }
 
     public array $middlewares;
