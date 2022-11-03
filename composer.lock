@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/elephox-dev/framework.git",
-                "reference": "a8a6d827e0eeca3639f44fae86541c18810119ac"
+                "reference": "24eee83cf7306571d3e01136464812f278623c18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elephox-dev/framework/zipball/a8a6d827e0eeca3639f44fae86541c18810119ac",
-                "reference": "a8a6d827e0eeca3639f44fae86541c18810119ac",
+                "url": "https://api.github.com/repos/elephox-dev/framework/zipball/24eee83cf7306571d3e01136464812f278623c18",
+                "reference": "24eee83cf7306571d3e01136464812f278623c18",
                 "shasum": ""
             },
             "require": {
@@ -72,7 +72,7 @@
                 "phpunit/phpunit": "^9.5",
                 "psalm/plugin-phpunit": "^0.16",
                 "roave/no-leaks": "^1.3",
-                "vimeo/psalm": "^5.0.0-beta1"
+                "vimeo/psalm": "dev-master#7c83878ae00b21959ba49d084cc1ddbb66e0d730"
             },
             "suggest": {
                 "ext-fileinfo": "To get the mime type of a file"
@@ -131,20 +131,20 @@
                 "issues": "https://github.com/elephox-dev/framework/issues",
                 "source": "https://github.com/elephox-dev/framework"
             },
-            "time": "2022-11-01T22:11:10+00:00"
+            "time": "2022-11-03T22:12:34+00:00"
         },
         {
             "name": "elephox/mimey",
-            "version": "4.0.2",
+            "version": "4.0.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/elephox-dev/mimey.git",
-                "reference": "8001940bf233d02a7f7fb264d02aa1b25d7ded71"
+                "reference": "cb82c4ccbd5e3e276aaf21a70413001af29363cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elephox-dev/mimey/zipball/8001940bf233d02a7f7fb264d02aa1b25d7ded71",
-                "reference": "8001940bf233d02a7f7fb264d02aa1b25d7ded71",
+                "url": "https://api.github.com/repos/elephox-dev/mimey/zipball/cb82c4ccbd5e3e276aaf21a70413001af29363cf",
+                "reference": "cb82c4ccbd5e3e276aaf21a70413001af29363cf",
                 "shasum": ""
             },
             "require": {
@@ -182,9 +182,9 @@
             ],
             "description": "PHP package for converting file extensions to MIME types and vice versa.",
             "support": {
-                "source": "https://github.com/elephox-dev/mimey/tree/4.0.2"
+                "source": "https://github.com/elephox-dev/mimey/tree/4.0.4"
             },
-            "time": "2022-07-19T21:21:41+00:00"
+            "time": "2022-11-03T19:37:44+00:00"
         },
         {
             "name": "evenement/evenement",

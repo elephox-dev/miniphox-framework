@@ -10,6 +10,11 @@ use Elephox\Web\Routing\Attribute\Http\Get;
 use Fig\Http\Message\StatusCodeInterface;
 use React\Http\Message\Response;
 
+#[Get]
+function index(): string {
+    return "This file is being watched. The server automatically restarts if it is changed. Try it!";
+}
+
 #[Get('/redirect')]
 function redirect(): Response
 {
@@ -24,4 +29,8 @@ function sleep(): string
     return "What a good sleep. Look at the timing in your network tab!";
 }
 
-Miniphox::build()->mount('/api', [redirect(...), sleep(...)])->run();
+Miniphox::build()
+    ->mount('/', index(...))
+    ->mount('/api', redirect(...), sleep(...))
+    ->watch(__FILE__)
+    ->run();

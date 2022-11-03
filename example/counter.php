@@ -18,7 +18,7 @@ function counter(stdClass $counter): string
     return "The current count is $counter->i";
 }
 
-$app = Miniphox::build()->mount('/api', [counter(...)]);
+$app = Miniphox::build()->mount('/api', counter(...));
 
 // transient services get created every time they are requested (unlike singletons)
 $app->services->addTransient(stdClass::class, stdClass::class, function () {

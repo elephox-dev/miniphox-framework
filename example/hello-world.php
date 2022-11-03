@@ -27,7 +27,7 @@ Miniphox::build()
     // This maps '/api' -> index() and '/api/greet/[name]' -> greet() according to their attributes above.
     //
     // You can pass first-class-callables or just the method name to the mount method.
-    ->mount('/api', [index(...), 'greet'])
+    ->mount('/api', index(...), 'greet')
 
     // This will start the HTTP server on http://0.0.0.0:8008.
     // Pass a string uri to bind to a specific ip address or a different port.

@@ -56,7 +56,7 @@ Miniphox::build()
     // This maps '/api' -> index() and '/api/greet/[name]' -> greet() according to their attributes above.
     //
     // You can pass first-class-callables or just the method name to the mount method.
-    ->mount('/api', [index(...), 'greet'])
+    ->mount('/api', index(...), 'greet')
 
     // This will start the HTTP server on http://0.0.0.0:8008.
     // Pass a string uri to bind to a specific ip address or a different port.
@@ -80,7 +80,7 @@ function counter(stdClass $counter): string {
     return "The current count is $counter->i";
 }
 
-$app = Miniphox::build()->mount('/api', [counter(...)]);
+$app = Miniphox::build()->mount('/api', counter(...));
 
 // transient services get created every time they are requested (unlike singletons)
 $app->services->addTransient(stdClass::class, stdClass::class, function () {
@@ -111,6 +111,7 @@ Some things left TODO include:
 - [ ] check how to improve performance even further (is it possible to leverage opcache?)
 - [ ] write up some tutorials on how to set up Doctrine and other common software stacks (phpdotenv using [Elephox/Configuration]?)
 - [x] ~~Improve the way server timings are logged (maybe also look into how to send headers while processing the request with ReactPHP)~~
+- [x] ~~Add file watching and auto-restarting server~~
 - [ ] _MAYBE_: refactor Miniphox to be server-agnostic (exchange ReactPHP with other servers like OpenSwoole, Amphp?)
 
 [React HTTP server]: https://reactphp.org/http
