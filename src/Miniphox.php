@@ -143,17 +143,16 @@ class Miniphox implements LoggerAwareInterface
                 $runPhpServerProcess();
             };
 
-            $files = [];
-
-            foreach (['src', 'public'] as $dir) {
-                array_push(
-                    $files,
-                    ...collect(...(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(getcwd() . DIRECTORY_SEPARATOR . $dir))))
+            $watchedFiles = static function () {
+                foreach (['src', 'public'] as $dir) {
+                    yield from collect(...(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(getcwd() . DIRECTORY_SEPARATOR . $dir))))
                         ->where(fn(SplFileInfo $fileInfo) => $fileInfo->isFile())
                         ->select(fn(SplFileInfo $fileInfo) => new File($fileInfo->getRealPath()))
-                        ->toArray(),
-                );
-            }
+                    ;
+                }
+            };
+
+            $files = iterator_to_array($watchedFiles());
 
             $this->info(sprintf("Watching %d file%s...", count($files), count($files) === 1 ? '' : 's'));
 
@@ -168,6 +167,8 @@ class Miniphox implements LoggerAwareInterface
 
             while ($process->isRunning()) {
                 $watcher->poll();
+
+                // TODO: re-create watcher if new files got added
 
                 usleep(1000_000);
             }
