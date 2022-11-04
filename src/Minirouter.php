@@ -27,7 +27,7 @@ class Minirouter
         return trim($part, '/');
     }
 
-    protected array $routeMap = [];
+    protected array $routeMap = [self::METHODS_ROUTE_KEY => []];
 
     public function __construct(
         protected readonly string $appNamespace,
