@@ -136,7 +136,7 @@ class Miniphox implements LoggerAwareInterface
         $runPhpServerProcess = function () use (&$process) {
             global $argv;
 
-            $process = new Process([(new PhpExecutableFinder())->find(false), $argv[0], '--no-watch']);
+            $process = new Process([(new PhpExecutableFinder())->find(false), ...$argv, '--no-watch']);
 
             /** @psalm-suppress UnusedClosureParam */
             $process->start(function (string $type, string $buffer): void {
