@@ -98,6 +98,13 @@ class Miniphox implements LoggerAwareInterface
         return $this;
     }
 
+    public function mountController(string $base, string $controller): self
+    {
+        $this->getRouter()->mountController($base, $controller, $this->getLogger());
+
+        return $this;
+    }
+
     public function watch(string|FileContract|DirectoryContract ...$nodes): self {
         $this->watchedNodes->addAll($nodes);
 

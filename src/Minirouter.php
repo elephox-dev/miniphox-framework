@@ -9,13 +9,17 @@ use Elephox\DI\Contract\ServiceCollection;
 use Elephox\Http\RequestMethod;
 use Elephox\Web\Routing\Attribute\Contract\RouteAttribute;
 use Fig\Http\Message\StatusCodeInterface;
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use React\Http\Message\Response;
 use ReflectionAttribute;
+use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
 use ricardoboss\Console;
 
 class Minirouter
@@ -40,28 +44,48 @@ class Minirouter
         $base = self::normalizePathPart($base);
 
         foreach ($routes as $route) {
-            if (is_string($route)) {
-                // qualify function name with app namespace so reflection works
-                $route = $this->appNamespace . $route;
-            } else if (!is_callable($route)) {
-                $logger->error(sprintf("Parameter <blue>\$routes</blue> may only contain callables or strings, <gray>%s</gray> given", get_debug_type($route)));
+            if ($route instanceof ReflectionFunctionAbstract) {
+                $functionReflection = $route;
+            } else {
+                if (is_string($route)) {
+                    // qualify function name with app namespace so reflection works
+                    $route = $this->appNamespace . $route;
+                } else if (!is_callable($route)) {
+                    $logger->error(sprintf("Parameter <blue>\$routes</blue> may only contain callables or strings, <gray>%s</gray> given", get_debug_type($route)));
 
-                continue;
-            }
+                    continue;
+                }
 
-            try {
-                $functionReflection = new ReflectionFunction($route);
-            } catch (ReflectionException $re) {
-                $logger->error(sprintf("%s while accessing <green>%s</green>: %s", $re::class, is_string($route) ? ("function " . $route . "()") : $route, $re->getMessage()));
+                try {
+                    $functionReflection = new ReflectionFunction($route);
+                } catch (ReflectionException $re) {
+                    $logger->error(sprintf("%s while accessing <green>%s</green>: %s", $re::class, is_string($route) ? ("function " . $route . "()") : $route, $re->getMessage()));
 
-                continue;
+                    continue;
+                }
             }
 
             $this->registerFunction($base, $functionReflection, $logger);
         }
     }
 
-    protected function registerFunction(string $basePath, ReflectionFunction $functionReflection, LoggerInterface $logger): void
+    public function mountController(string $base, string $class, LoggerInterface $logger): void
+    {
+        $base = self::normalizePathPart($base);
+
+        try {
+            $classReflection = new ReflectionClass($class);
+            $methods = $classReflection->getMethods(ReflectionMethod::IS_PUBLIC);
+        } catch (ReflectionException $re) {
+            $logger->error(sprintf("%s while accessing class <green>%s</green>: %s", $re::class, $class, $re->getMessage()));
+
+            return;
+        }
+
+        $this->mount($base, $methods, $logger);
+    }
+
+    protected function registerFunction(string $basePath, ReflectionFunctionAbstract $functionReflection, LoggerInterface $logger): void
     {
         $attributes = $functionReflection->getAttributes(RouteAttribute::class, ReflectionAttribute::IS_INSTANCEOF);
 
@@ -79,7 +103,25 @@ class Minirouter
             $attributePath = '/' . $attributeInstance->getPath();
             $path = $basePath . $attributePath;
             $verbs = $attributeInstance->getRequestMethods();
-            $closure = $functionReflection->getClosure();
+
+            if ($functionReflection->isStatic()) {
+                $closure = $functionReflection->getClosure();
+            } else {
+                $closure = static function (ServiceCollection $services, ServerRequestInterface $request, array $handlerArgs) use ($functionReflection): mixed {
+                    assert($functionReflection instanceof ReflectionMethod, "Only static reflection functions are supported.");
+
+                    $controllerClass = $functionReflection->getDeclaringClass();
+                    $controllerClassName = $controllerClass->getName();
+
+                    if (!$services->hasService($controllerClassName)) {
+                        $services->addSingleton($controllerClassName, $controllerClassName);
+                    }
+
+                    $controller = $services->requireService($controllerClassName);
+                    $routeCallback = $functionReflection->getClosure($controller);
+                    return $services->resolver()->callback($routeCallback, ['request' => $request, 'handlerArgs' => $handlerArgs, ...$handlerArgs]);
+                };
+            }
 
             /** @var RequestMethod $verb */
             foreach ($verbs as $verb) {
@@ -192,7 +234,7 @@ class Minirouter
 
         $callback = $availableMethods[$method];
 
-        return static fn () => $services->callback($callback, ['request' => $request, ...$handlerArgs]);
+        return static fn () => $services->callback($callback, ['request' => $request, 'handlerArgs' => $handlerArgs, ...$handlerArgs]);
     }
 
     protected function handleNotFound(ServerRequestInterface $request): ResponseInterface
