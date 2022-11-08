@@ -28,9 +28,6 @@ use React\Http\Message\Response;
 use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
 use React\Http\Middleware\RequestBodyParserMiddleware;
 use React\Socket\SocketServer;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
-use SplFileInfo;
 use Stringable;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
@@ -254,9 +251,8 @@ class Miniphox implements LoggerAwareInterface
 
     protected function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $callback = $this->getRouter()->getHandler($request, $this->services);
-
         try {
+            $callback = $this->getRouter()->getHandler($request, $this->services);
             $result = $callback();
 
             if (is_string($result)) {
