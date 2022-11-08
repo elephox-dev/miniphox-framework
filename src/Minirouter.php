@@ -4,12 +4,16 @@ declare(strict_types=1);
 namespace Elephox\Miniphox;
 
 use Closure;
+use Elephox\Collection\AmbiguousMatchException;
+use Elephox\Collection\ArrayMap;
+use Elephox\Collection\Contract\GenericMap;
 use Elephox\Collection\KeyedEnumerable;
+use Elephox\DI\Contract\Resolver;
 use Elephox\DI\Contract\ServiceCollection;
+use Elephox\DI\UnresolvedParameterException;
 use Elephox\Http\RequestMethod;
 use Elephox\Web\Routing\Attribute\Contract\RouteAttribute;
 use Fig\Http\Message\StatusCodeInterface;
-use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
@@ -19,7 +23,11 @@ use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
+use ReflectionIntersectionType;
 use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionParameter;
+use ReflectionUnionType;
 use ricardoboss\Console;
 
 class Minirouter
@@ -32,11 +40,13 @@ class Minirouter
     }
 
     protected array $routeMap = [self::METHODS_ROUTE_KEY => []];
+    protected GenericMap $dtos;
 
     public function __construct(
         protected readonly string $appNamespace,
     )
     {
+        $this->dtos = new ArrayMap();
     }
 
     public function mount(string $base, iterable $routes, LoggerInterface $logger): void
@@ -85,6 +95,19 @@ class Minirouter
         $this->mount($base, $methods, $logger);
     }
 
+    public function registerDto(string $dtoClass, ?callable $factory = null): void {
+        $factory ??= static function (ServerRequestInterface $request, array $routeParams, Resolver $resolver) use ($dtoClass) {
+            $body = $request->getParsedBody();
+            if (!is_array($body)) {
+                $body = [];
+            }
+
+            return $resolver->instantiate($dtoClass, ['request' => $request, 'routeParams' => $routeParams, ...$routeParams, ...$body]);
+        };
+
+        $this->dtos->put($dtoClass, $factory);
+    }
+
     protected function registerFunction(string $basePath, ReflectionFunctionAbstract $functionReflection, LoggerInterface $logger): void
     {
         $attributes = $functionReflection->getAttributes(RouteAttribute::class, ReflectionAttribute::IS_INSTANCEOF);
@@ -104,11 +127,11 @@ class Minirouter
             $path = $basePath . $attributePath;
             $verbs = $attributeInstance->getRequestMethods();
 
-            if ($functionReflection->isStatic()) {
-                $closure = $functionReflection->getClosure();
+            if ($functionReflection instanceof ReflectionFunction || $functionReflection->isStatic()) {
+                $closure = static fn () => $functionReflection->getClosure();
             } else {
-                $closure = static function (ServiceCollection $services, ServerRequestInterface $request, array $handlerArgs) use ($functionReflection): mixed {
-                    assert($functionReflection instanceof ReflectionMethod, "Only static reflection functions are supported.");
+                $closure = static function (ServiceCollection $services) use ($functionReflection): Closure {
+                    assert($functionReflection instanceof ReflectionMethod);
 
                     $controllerClass = $functionReflection->getDeclaringClass();
                     $controllerClassName = $controllerClass->getName();
@@ -118,8 +141,7 @@ class Minirouter
                     }
 
                     $controller = $services->requireService($controllerClassName);
-                    $routeCallback = $functionReflection->getClosure($controller);
-                    return $services->resolver()->callback($routeCallback, ['request' => $request, 'handlerArgs' => $handlerArgs, ...$handlerArgs]);
+                    return $functionReflection->getClosure($controller);
                 };
             }
 
@@ -191,9 +213,9 @@ class Minirouter
         }
     }
 
-    public function getHandler(ServerRequestInterface $request, ServiceCollection $services): callable
+    public function getHandler(ServerRequestInterface $request, Resolver $services): callable
     {
-        $handlerArgs = [];
+        $routeParams = [];
         $path = $request->getUri()->getPath();
         $routes = &$this->routeMap;
 
@@ -210,7 +232,7 @@ class Minirouter
                 $routes = &$routes[$dynamicPathPart];
 
                 $dynamicPartName = trim($dynamicPathPart, '[]');
-                $handlerArgs[$dynamicPartName] = $pathPart;
+                $routeParams[$dynamicPartName] = $pathPart;
             } else {
                 $routes = &$routes[$pathPart];
             }
@@ -221,7 +243,7 @@ class Minirouter
 
         assert(is_array($routes), 'Invalid route table?');
 
-        if (!isset($routes[self::METHODS_ROUTE_KEY])) {
+        if (!isset($routes[self::METHODS_ROUTE_KEY]) || empty($routes[self::METHODS_ROUTE_KEY])) {
             // no http handlers at this endpoint
             return fn () => $this->handleNotFound($request);
         }
@@ -232,9 +254,73 @@ class Minirouter
             return fn () => $this->handleMethodNotAllowed($request);
         }
 
-        $callback = $availableMethods[$method];
+        $callbackFactory = $availableMethods[$method];
+        $callback = $services->callback($callbackFactory);
 
-        return static fn () => $services->callback($callback, ['request' => $request, 'handlerArgs' => $handlerArgs, ...$handlerArgs]);
+        if (RequestMethod::from($method)->canHaveBody()) {
+            $body = $request->getParsedBody();
+            if (is_array($body)) {
+                $routeParams += $body;
+            }
+        }
+
+        return fn () => $services->callback(
+            $callback,
+            $this->getHandlerArgs($request, $routeParams),
+            fn (ReflectionParameter $parameter) => $services->callback(
+                $this->resolveDynamicParameter(...),
+                ['parameter' => $parameter, 'request' => $request, 'routeParams' => $routeParams],
+            ),
+        );
+    }
+
+    protected function getHandlerArgs(ServerRequestInterface $request, array $routeParams): array {
+        return  ['request' => $request, 'routeParams' => $routeParams, ...$routeParams];
+    }
+
+    protected function resolveDynamicParameter(ReflectionParameter $parameter, Resolver $resolver, ServerRequestInterface $request, array $routeParams): mixed {
+        $type = $parameter->getType();
+        if ($type instanceof ReflectionIntersectionType) {
+            assert(false, "ReflectionIntersectionTypes are not supported yet");
+        } else if ($type instanceof ReflectionNamedType) {
+            $types = [$type];
+        } else if ($type instanceof ReflectionUnionType) {
+            $types = $type->getTypes();
+        } else {
+            throw new UnresolvedParameterException(
+                $parameter->getDeclaringClass()?->getName() ?? '<unknown>',
+                $parameter->getDeclaringFunction()->getName(),
+                $parameter->getType()?->getName() ?? 'mixed',
+                $parameter->getName(),
+            );
+        }
+
+        assert(!empty($types));
+
+        $typeCollection = collect(...$types)->toArrayList();
+        $possibleDtos = $this->dtos
+            ->keys()
+            ->where(fn (string $className) => $typeCollection->any(fn (ReflectionNamedType $type) => $type->getName() === $className))
+            ->toArrayList();
+
+        if ($possibleDtos->isEmpty()) {
+            throw new UnresolvedParameterException(
+                $parameter->getDeclaringClass()?->getName() ?? '<unknown>',
+                $parameter->getDeclaringFunction()->getName(),
+                $parameter->getType()?->getName() ?? 'mixed',
+                $parameter->getName(),
+            );
+        }
+
+        if ($possibleDtos->count() > 1) {
+            throw new AmbiguousMatchException();
+        }
+
+        /** @var class-string $dtoClass */
+        $dtoClass = $possibleDtos->pop();
+        $factory = $this->dtos->get($dtoClass);
+
+        return $resolver->callback($factory, $this->getHandlerArgs($request, $routeParams));
     }
 
     protected function handleNotFound(ServerRequestInterface $request): ResponseInterface

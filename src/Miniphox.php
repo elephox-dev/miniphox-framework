@@ -106,6 +106,13 @@ class Miniphox implements LoggerAwareInterface
         return $this;
     }
 
+    public function registerDto(string $dtoClass, ?callable $factory = null): self
+    {
+        $this->getRouter()->registerDto($dtoClass, $factory);
+
+        return $this;
+    }
+
     public function watch(string|FileContract|DirectoryContract ...$nodes): self {
         $this->watchedNodes->addAll($nodes);
 
