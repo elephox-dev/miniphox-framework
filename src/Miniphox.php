@@ -65,6 +65,7 @@ class Miniphox implements LoggerAwareInterface
         $this->middlewares = [
             new LimitConcurrentRequestsMiddleware(100),
             new RequestBodyParserMiddleware(),
+            new RequestJsonBodyParserMiddleware(),
             new RequestLoggerMiddleware($this->services),
         ];
 
