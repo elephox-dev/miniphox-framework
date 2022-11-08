@@ -85,7 +85,7 @@ class Minirouter
 
         try {
             $classReflection = new ReflectionClass($class);
-            $methods = $classReflection->getMethods(ReflectionMethod::IS_PUBLIC);
+            $methods = array_filter($classReflection->getMethods(ReflectionMethod::IS_PUBLIC), static fn (ReflectionMethod $m) => !$m->isConstructor() && !$m->isDestructor());
         } catch (ReflectionException $re) {
             $logger->error(sprintf("%s while accessing class <green>%s</green>: %s", $re::class, $class, $re->getMessage()));
 
