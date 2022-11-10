@@ -117,7 +117,6 @@
       <extension name="pcntl" enabled="false" />
       <extension name="pdflib" enabled="false" />
       <extension name="pdo_ibm" enabled="false" />
-      <extension name="pdo_mysql" enabled="false" />
       <extension name="pdo_pgsql" enabled="false" />
       <extension name="pgsql" enabled="false" />
       <extension name="posix" enabled="false" />
@@ -131,7 +130,6 @@
       <extension name="snappy" enabled="false" />
       <extension name="snmp" enabled="false" />
       <extension name="soap" enabled="false" />
-      <extension name="sockets" enabled="false" />
       <extension name="sodium" enabled="false" />
       <extension name="sqlite3" enabled="false" />
       <extension name="sqlsrv" enabled="false" />

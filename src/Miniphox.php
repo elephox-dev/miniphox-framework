@@ -33,10 +33,20 @@ class Miniphox extends AbstractMiniphox implements RunnerInterface
     public function run(string $host = "0.0.0.0", int $port = 8008): never
     {
         if (!$this->shouldWatch()) {
+            $this->getRouter()->printRoutingTable($this->getLogger());
+
+            $httpHost = $host === '0.0.0.0' ? 'localhost' : $host;
+            $httpPort = $port === 80 ? '' : ":$port";
+            $this->getLogger()->info("Running HTTP server at <blue><underline>http://$httpHost$httpPort</underline></blue>");
+
             $this->runServerProcess($host, $port);
+
+            exit;
         }
 
         $this->runWatcherProcess($host, $port);
+
+        exit;
     }
 
     private function shouldWatch(): bool {

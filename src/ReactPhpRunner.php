@@ -22,10 +22,7 @@ trait ReactPhpRunner
     abstract public function handle(ServerRequestInterface $request): ResponseInterface;
 
     public function run(string $host = "0.0.0.0", int $port = 8008): never {
-        $this->getRouter()->printRoutingTable($this->getLogger());
-
         $uri = "tcp://$host:$port";
-        $this->getLogger()->info("Running HTTP server at <blue><underline>http://$host:$port</underline></blue>");
 
         $socket = new SocketServer($uri);
         $socket->on('error', fn(Throwable $error) => $this->getLogger()->error($error));
