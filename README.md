@@ -27,6 +27,7 @@ Done.
 ### Show me some code already
 
 `hello-world.php`
+
 ```php
 <?php
 declare(strict_types=1);
@@ -37,7 +38,7 @@ namespace App;
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use Elephox\Miniphox\Attributes\Get;
-use Elephox\Miniphox\Miniphox;
+use Elephox\Miniphox\AbstractMiniphox;
 
 #[Get] // defaults to '/'
 function index(): string {
@@ -50,7 +51,7 @@ function greet(string $name): string {
 }
 
 // This creates a new Miniphox app.
-Miniphox::build()
+AbstractMiniphox::build()
 
     // index() and greet() are mounted at '/api'.
     // This maps '/api' -> index() and '/api/greet/[name]' -> greet() according to their attributes above.
