@@ -21,7 +21,7 @@ function counter(stdClass $counter): string
 $app = Miniphox::build()->mount('/api', counter(...));
 
 // transient services get created every time they are requested (unlike singletons)
-$app->services->addTransient(stdClass::class, stdClass::class, function () {
+$app->getServices()->addTransient(stdClass::class, stdClass::class, function () {
     static $i; // this keeps track of how many times this services was created
 
     $counter = new stdClass();

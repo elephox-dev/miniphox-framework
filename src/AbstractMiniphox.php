@@ -67,6 +67,10 @@ abstract class AbstractMiniphox implements LoggerAwareInterface, RequestHandlerI
         return $this->services->requireService(Minirouter::class);
     }
 
+    public function getServices(): ServiceCollection {
+        return $this->services;
+    }
+
     public function getMiddlewares(): GenericEnumerable
     {
         return $this->middlewares;
