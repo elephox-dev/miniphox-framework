@@ -42,7 +42,7 @@ trait FileWatchingRunner
         return $this;
     }
 
-    public function run(string $host = "0.0.0.0", int $port = 8008): never
+    public function run(): int
     {
         $process = null;
         $runPhpServerProcess = function () use (&$process) {
@@ -135,6 +135,6 @@ trait FileWatchingRunner
 
         $this->getLogger()->warning(sprintf('Server process exited with code %s', $process->getExitCode() ?? '<unknown>'));
 
-        exit;
+        return $process->getExitCode() ?? 0;
     }
 }

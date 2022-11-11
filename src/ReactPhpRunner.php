@@ -19,9 +19,16 @@ trait ReactPhpRunner
 
     abstract public function getMiddlewares(): GenericEnumerable;
 
+    abstract public function getHost(): string;
+
+    abstract public function getPort(): int;
+
     abstract public function handle(ServerRequestInterface $request): ResponseInterface;
 
-    public function run(string $host = "0.0.0.0", int $port = 8008): never {
+    public function run(): int {
+        $host = $this->getHost();
+        $port = $this->getPort();
+
         $uri = "tcp://$host:$port";
 
         $socket = new SocketServer($uri);
@@ -31,6 +38,6 @@ trait ReactPhpRunner
         $http->on('error', fn(Throwable $error) => $this->getLogger()->error($error));
         $http->listen($socket);
 
-        exit;
+        return 0;
     }
 }
