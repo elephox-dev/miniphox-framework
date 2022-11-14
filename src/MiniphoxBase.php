@@ -77,11 +77,12 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
         return $this->services->requireService(Minirouter::class);
     }
 
-    public function getServices(): ServiceCollection {
+    public function getServices(): ServiceCollection
+    {
         return $this->services;
     }
 
-    public function getMiddlewares(): GenericEnumerable
+    public function getMiddlewares(): ArraySet
     {
         return $this->middlewares;
     }
