@@ -6,6 +6,7 @@ namespace Elephox\Miniphox;
 use Elephox\Http\ServerRequestBuilder;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use function frankenphp_handle_request;
 
 trait FrankenPhpRunner
 {
@@ -15,7 +16,15 @@ trait FrankenPhpRunner
         do {
             $running = frankenphp_handle_request(function () {
                 $request = ServerRequestBuilder::fromGlobals();
-                $this->handle($request);
+                $response = $this->handle($request);
+
+                http_response_code($response->getStatusCode());
+
+                foreach ($response->getHeaders() as $headerName => $values) {
+                    header("$headerName: " . implode(',', $values));
+                }
+
+                echo $response->getBody()->getContents();
             });
         } while ($running);
 

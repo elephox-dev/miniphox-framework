@@ -6,22 +6,19 @@ namespace Elephox\Miniphox;
 use Elephox\DI\Contract\ServiceCollection;
 use Symfony\Component\Process\PhpExecutableFinder;
 
-class Miniphox extends AbstractMiniphox implements RunnerInterface
+class Miniphox extends MiniphoxBase implements RunnerInterface
 {
     use ReactPhpRunner {
         ReactPhpRunner::run as runServerProcess;
     }
+
     use FileWatchingRunner {
         FileWatchingRunner::__construct as constructFileWatcher;
         FileWatchingRunner::run as runWatcherProcess;
     }
 
-    public const DEFAULT_NAMESPACE = 'App';
-
-    public static function build(string $appNamespace = self::DEFAULT_NAMESPACE, ?ServiceCollection $services = null): self
-    {
-        return new self($appNamespace, $services);
-    }
+    protected string $host = "0.0.0.0";
+    protected int $port = 8008;
 
     protected function __construct(string $appNamespace, ?ServiceCollection $services)
     {
@@ -30,14 +27,28 @@ class Miniphox extends AbstractMiniphox implements RunnerInterface
         $this->constructFileWatcher();
     }
 
+    public function setHost(string $host): self
+    {
+        $this->host = $host;
+
+        return $this;
+    }
+
     public function getHost(): string
     {
-        // TODO: Implement getHost() method.
+        return $this->host;
+    }
+
+    public function setPort(int $port): self
+    {
+        $this->port = $port;
+
+        return $this;
     }
 
     public function getPort(): int
     {
-        // TODO: Implement getPort() method.
+        return $this->port;
     }
 
     public function run(): int

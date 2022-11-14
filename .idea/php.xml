@@ -49,6 +49,9 @@
       <path value="$PROJECT_DIR$/vendor/elephox/di" />
       <path value="$PROJECT_DIR$/vendor/elephox/logging" />
       <path value="$PROJECT_DIR$/vendor/psr/http-server-handler" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-factory" />
+      <path value="$PROJECT_DIR$/vendor/nyholm/psr7" />
+      <path value="$PROJECT_DIR$/vendor/php-http/message-factory" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.1" />

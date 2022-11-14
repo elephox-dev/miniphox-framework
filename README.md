@@ -38,7 +38,7 @@ namespace App;
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 use Elephox\Miniphox\Attributes\Get;
-use Elephox\Miniphox\AbstractMiniphox;
+use Elephox\Miniphox\MiniphoxBase;
 
 #[Get] // defaults to '/'
 function index(): string {
@@ -51,7 +51,7 @@ function greet(string $name): string {
 }
 
 // This creates a new Miniphox app.
-AbstractMiniphox::build()
+MiniphoxBase::build()
 
     // index() and greet() are mounted at '/api'.
     // This maps '/api' -> index() and '/api/greet/[name]' -> greet() according to their attributes above.

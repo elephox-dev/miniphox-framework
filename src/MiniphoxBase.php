@@ -25,9 +25,19 @@ use React\Http\Middleware\RequestBodyParserMiddleware;
 use Stringable;
 use Throwable;
 
-abstract class AbstractMiniphox implements LoggerAwareInterface, RequestHandlerInterface
+/**
+ * @psalm-consistent-constructor
+ */
+class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
 {
     use LogLevelProxy;
+
+    public const DEFAULT_NAMESPACE = 'App';
+
+    public static function build(string $appNamespace = self::DEFAULT_NAMESPACE, ?ServiceCollection $services = null): static
+    {
+        return new static($appNamespace, $services);
+    }
 
     protected static function normalizeAppNamespace(string $namespace): string
     {
@@ -81,21 +91,21 @@ abstract class AbstractMiniphox implements LoggerAwareInterface, RequestHandlerI
         $this->getLogger()->log($level, $message, $context);
     }
 
-    public function mount(string $base, callable|string ...$routes): self
+    public function mount(string $base, callable|string ...$routes): static
     {
         $this->getRouter()->mount($base, $routes, $this->getLogger());
 
         return $this;
     }
 
-    public function mountController(string $base, string $controller): self
+    public function mountController(string $base, string $controller): static
     {
         $this->getRouter()->mountController($base, $controller, $this->getLogger());
 
         return $this;
     }
 
-    public function registerDto(string $dtoClass, ?callable $factory = null): self
+    public function registerDto(string $dtoClass, ?callable $factory = null): static
     {
         $this->getRouter()->registerDto($dtoClass, $factory);
 
