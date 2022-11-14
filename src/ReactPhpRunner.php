@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Elephox\Miniphox;
 
-use Elephox\Collection\Contract\GenericEnumerable;
+use Elephox\Collection\Contract\GenericSet;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
@@ -17,7 +17,7 @@ trait ReactPhpRunner
 
     abstract public function getLogger(): LoggerInterface;
 
-    abstract public function getMiddlewares(): GenericEnumerable;
+    abstract public function getMiddlewares(): GenericSet;
 
     abstract public function getHost(): string;
 
