@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+  runtime:
+    image: dunglas/frankenphp
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./:/app
+      - ./Caddyfile:/etc/Caddyfile
+    working_dir: /app
