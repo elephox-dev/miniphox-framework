@@ -7,11 +7,11 @@
     }
 }
 
-{$SERVER_NAME:localhost}
+{$SERVER_NAME:localhost:80}
 
 log
 route {
-        root * public/
+        root * /app/
 
         # Add trailing slash for directory requests
         @canonicalPath {

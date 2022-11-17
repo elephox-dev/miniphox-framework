@@ -9,11 +9,13 @@ use Elephox\Web\Routing\Attribute\Http\Get;
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 class Frankenphox extends MiniphoxBase implements RunnerInterface {
-    use FrankenPhpRunner;
+    use FrankenPhpRunner {
+        FrankenPhpRunner::runFrankenPhpServer as run;
+    }
 }
 
 #[Get('/')]
-function index() {
+function index(): string {
     return "Hello!";
 }
 
