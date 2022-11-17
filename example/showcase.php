@@ -32,5 +32,6 @@ function sleep(): string
 Miniphox::build()
     ->mount('/', index(...))
     ->mount('/api', redirect(...), sleep(...))
+    ->staticFiles(__DIR__ . '/static')
     ->watch(__FILE__)
     ->run();
