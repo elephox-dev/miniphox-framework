@@ -30,6 +30,11 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
 {
     public const DEFAULT_NAMESPACE = 'App';
 
+    public static function build(): static
+    {
+        return new static(self::DEFAULT_NAMESPACE, null);
+    }
+
     protected static function normalizeNamespace(string $namespace): string
     {
         return Casing::toLower(trim($namespace, '\\')) . '\\';

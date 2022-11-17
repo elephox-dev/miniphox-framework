@@ -7,11 +7,6 @@ use Elephox\DI\Contract\ServiceCollection;
 
 class Miniphox extends MiniphoxBase implements RunnerInterface
 {
-    public static function build(): static
-    {
-        return new static(MiniphoxBase::DEFAULT_NAMESPACE, null);
-    }
-
     use ReactPhpRunner {
         ReactPhpRunner::__construct as constructReactPhpServer;
         ReactPhpRunner::runReactServer as runServerProcess;
