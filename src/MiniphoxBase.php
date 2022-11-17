@@ -3,23 +3,20 @@ declare(strict_types=1);
 
 namespace Elephox\Miniphox;
 
-use Elephox\Collection\ArraySet;
 use Elephox\DI\Contract\ServiceCollection as ServiceCollectionContract;
 use Elephox\DI\ServiceCollection;
+use Elephox\Http\Response;
+use Elephox\Http\ResponseCode;
 use Elephox\Logging\EnhancedMessageSink;
 use Elephox\Logging\SimpleFormatColorSink;
 use Elephox\Logging\SingleSinkLogger;
 use Elephox\Logging\StandardSink;
 use Elephox\OOR\Casing;
-use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
-use React\Http\Message\Response;
-use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
-use React\Http\Middleware\RequestBodyParserMiddleware;
 use Stringable;
 use Throwable;
 
@@ -40,7 +37,6 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
         return Casing::toLower(trim($namespace, '\\')) . '\\';
     }
 
-    private readonly ArraySet $middlewares;
     private readonly ServiceCollectionContract $services;
 
     public function __construct(string $routesNamespace, ?ServiceCollectionContract $services)
@@ -53,13 +49,6 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
             $router->setLogger($logger);
             return $router;
         });
-
-        $this->middlewares = new ArraySet([
-            new LimitConcurrentRequestsMiddleware(100),
-            new RequestBodyParserMiddleware(),
-            new RequestJsonBodyParserMiddleware(),
-            new RequestLoggerMiddleware($this->services),
-        ]);
     }
 
     public function setLogger(LoggerInterface $logger): void
@@ -80,11 +69,6 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
     public function getServices(): ServiceCollectionContract
     {
         return $this->services;
-    }
-
-    public function getMiddlewares(): ArraySet
-    {
-        return $this->middlewares;
     }
 
     protected function log(mixed $level, Stringable|string $message, array $context = []): void
@@ -120,9 +104,9 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
             $result = $callback();
 
             if (is_string($result)) {
-                $response = Response::plaintext($result);
+                $response = Response::build()->responseCode(ResponseCode::OK)->textBody($result)->get();
             } else if (is_array($result)) {
-                $response = Response::json($result);
+                $response = Response::build()->responseCode(ResponseCode::OK)->jsonBody($result)->get();
             } else if ($result instanceof ResponseInterface) {
                 $response = $result;
             } else {
@@ -141,8 +125,10 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
 
     protected function handleInternalServerError(ServerRequestInterface $request): ResponseInterface
     {
-        return Response::plaintext("Unable to handle request.")
-            ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
+        return Response::build()
+            ->textBody("Unable to handle request.")
+            ->responseCode(ResponseCode::InternalServerError)
+            ->get();
     }
 
     protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface {

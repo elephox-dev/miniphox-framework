@@ -3,13 +3,16 @@ declare(strict_types=1);
 
 namespace Elephox\Miniphox;
 
-use Elephox\Collection\Contract\GenericSet;
+use Elephox\Collection\ArraySet;
+use Elephox\DI\Contract\ServiceCollection;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use React\Http\HttpServer;
+use React\Http\Middleware\LimitConcurrentRequestsMiddleware;
+use React\Http\Middleware\RequestBodyParserMiddleware;
 use React\Socket\SocketServer;
 use Throwable;
 
@@ -19,18 +22,32 @@ trait ReactPhpRunner
 
     private int $port = 8008;
 
+    private readonly ArraySet $middlewares;
+
     private LoopInterface $loop;
 
     public function __construct()
     {
         $this->loop = Loop::get();
+
+        $this->middlewares = new ArraySet([
+            new LimitConcurrentRequestsMiddleware(100),
+            new RequestBodyParserMiddleware(),
+            new RequestJsonBodyParserMiddleware(),
+            new RequestLoggerMiddleware($this->getServices()),
+        ]);
     }
 
     abstract public function getRouter(): Minirouter;
 
     abstract public function getLogger(): LoggerInterface;
 
-    abstract public function getMiddlewares(): GenericSet;
+    abstract public function getServices(): ServiceCollection;
+
+    public function getMiddlewares(): ArraySet
+    {
+        return $this->middlewares;
+    }
 
     public function setHost(string $host): self
     {
@@ -54,6 +71,13 @@ trait ReactPhpRunner
     public function getPort(): int
     {
         return $this->port;
+    }
+
+    public function staticFiles(string $root): static
+    {
+        $this->middlewares->add(new StaticFileServerMiddleware($root));
+
+        return $this;
     }
 
     abstract public function handle(ServerRequestInterface $request): ResponseInterface;
