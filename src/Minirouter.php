@@ -222,7 +222,7 @@ class Minirouter implements LoggerAwareInterface
         }
     }
 
-    public function getHandler(ServerRequestInterface $request, Resolver $services): callable
+    public function getHandler(ServerRequestInterface $request, Resolver $resolver): callable
     {
         $routeParams = [];
         $path = $request->getUri()->getPath();
@@ -264,7 +264,7 @@ class Minirouter implements LoggerAwareInterface
         }
 
         $callbackFactory = $availableMethods[$method];
-        $callback = $services->callback($callbackFactory);
+        $callback = $resolver->callback($callbackFactory);
 
         if (RequestMethod::from($method)->canHaveBody()) {
             $body = $request->getParsedBody();
@@ -273,14 +273,29 @@ class Minirouter implements LoggerAwareInterface
             }
         }
 
-        return fn () => $services->callback(
-            $callback,
-            $this->getHandlerArgs($request, $routeParams),
-            fn (ReflectionParameter $parameter) => $services->callback(
-                $this->resolveDynamicParameter(...),
-                ['parameter' => $parameter, 'request' => $request, 'routeParams' => $routeParams],
-            ),
-        );
+        return function () use ($resolver, $callback, $request, $routeParams): mixed {
+            $unresolvedDynamicParameter = false;
+            $arguments = $resolver->resolveArguments(
+                new ReflectionFunction($callback),
+                $this->getHandlerArgs($request, $routeParams),
+                function (ReflectionParameter $parameter) use ($resolver, $request, $routeParams, &$unresolvedDynamicParameter): mixed
+                {
+                    try {
+                        return $this->resolveDynamicParameter($parameter, $resolver, $request, $routeParams);
+                    } catch (UnresolvedParameterException) {
+                        $unresolvedDynamicParameter = true;
+
+                        return null;
+                    }
+                },
+            );
+
+            if ($unresolvedDynamicParameter) {
+                return $this->handleUnprocessableEntity($request);
+            }
+
+            return $callback(...$arguments);
+        };
     }
 
     protected function getHandlerArgs(ServerRequestInterface $request, array $routeParams): array {
@@ -342,5 +357,11 @@ class Minirouter implements LoggerAwareInterface
     {
         return Response::json("Method {$request->getMethod()} not allowed at: {$request->getRequestTarget()}")
             ->withStatus(StatusCodeInterface::STATUS_METHOD_NOT_ALLOWED);
+    }
+
+    protected function handleUnprocessableEntity(ServerRequestInterface $request): ResponseInterface
+    {
+        return Response::json(['message' => "Unable to processes request body", 'body' => $request->getParsedBody()])
+            ->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
     }
 }
