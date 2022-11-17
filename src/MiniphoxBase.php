@@ -4,11 +4,9 @@ declare(strict_types=1);
 namespace Elephox\Miniphox;
 
 use Elephox\Collection\ArraySet;
-use Elephox\Collection\Contract\GenericEnumerable;
-use Elephox\DI\Contract\ServiceCollection;
-use Elephox\DI\ServiceCollection as ServiceCollectionImpl;
+use Elephox\DI\Contract\ServiceCollection as ServiceCollectionContract;
+use Elephox\DI\ServiceCollection;
 use Elephox\Logging\EnhancedMessageSink;
-use Elephox\Logging\LogLevelProxy;
 use Elephox\Logging\SimpleFormatColorSink;
 use Elephox\Logging\SingleSinkLogger;
 use Elephox\Logging\StandardSink;
@@ -30,29 +28,26 @@ use Throwable;
  */
 class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
 {
-    use LogLevelProxy;
-
     public const DEFAULT_NAMESPACE = 'App';
 
-    public static function build(string $appNamespace = self::DEFAULT_NAMESPACE, ?ServiceCollection $services = null): static
-    {
-        return new static($appNamespace, $services);
-    }
-
-    protected static function normalizeAppNamespace(string $namespace): string
+    protected static function normalizeNamespace(string $namespace): string
     {
         return Casing::toLower(trim($namespace, '\\')) . '\\';
     }
 
     private readonly ArraySet $middlewares;
-    private readonly ServiceCollection $services;
+    private readonly ServiceCollectionContract $services;
 
-    protected function __construct(string $appNamespace, ?ServiceCollection $services)
+    public function __construct(string $routesNamespace, ?ServiceCollectionContract $services)
     {
-        $appNamespace = self::normalizeAppNamespace($appNamespace);
-        $this->services = $services ?? new ServiceCollectionImpl();
+        $routesNamespace = self::normalizeNamespace($routesNamespace);
+        $this->services = $services ?? new ServiceCollection();
         $this->services->addSingleton(LoggerInterface::class, SingleSinkLogger::class, fn(): SingleSinkLogger => new SingleSinkLogger(new EnhancedMessageSink(new SimpleFormatColorSink(new StandardSink()))));
-        $this->services->addSingleton(Minirouter::class, instance: new Minirouter($appNamespace));
+        $this->services->addSingleton(Minirouter::class, Minirouter::class, function (LoggerInterface $logger) use ($routesNamespace) {
+            $router = new Minirouter($routesNamespace);
+            $router->setLogger($logger);
+            return $router;
+        });
 
         $this->middlewares = new ArraySet([
             new LimitConcurrentRequestsMiddleware(100),
@@ -77,7 +72,7 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
         return $this->services->requireService(Minirouter::class);
     }
 
-    public function getServices(): ServiceCollection
+    public function getServices(): ServiceCollectionContract
     {
         return $this->services;
     }
@@ -94,14 +89,14 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
 
     public function mount(string $base, callable|string ...$routes): static
     {
-        $this->getRouter()->mount($base, $routes, $this->getLogger());
+        $this->getRouter()->mount($base, $routes);
 
         return $this;
     }
 
     public function mountController(string $base, string $controller): static
     {
-        $this->getRouter()->mountController($base, $controller, $this->getLogger());
+        $this->getRouter()->mountController($base, $controller);
 
         return $this;
     }
@@ -126,14 +121,14 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
             } else if ($result instanceof ResponseInterface) {
                 $response = $result;
             } else {
-                $this->error(sprintf("Unable to infer response from type %s. Please return a string, array or instance of %s", get_debug_type($result), ResponseInterface::class));
+                $this->getLogger()->error(sprintf("Unable to infer response from type %s. Please return a string, array or instance of %s", get_debug_type($result), ResponseInterface::class));
 
                 return $this->handleInternalServerError($request);
             }
 
             return $response;
         } catch (Throwable $e) {
-            $this->error($e);
+            $this->getLogger()->error($e);
 
             return $this->handleInternalServerError($request);
         }
@@ -143,5 +138,16 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
     {
         return Response::plaintext("Unable to handle request.")
             ->withStatus(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR);
+    }
+
+    protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface {
+        return $request;
+    }
+
+    protected function beforeResponseSent(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        return $response;
+    }
+
+    protected function afterResponseSent(ServerRequestInterface $request, ResponseInterface $response): void {
     }
 }

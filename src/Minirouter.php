@@ -16,6 +16,7 @@ use Elephox\Web\Routing\Attribute\Contract\RouteAttribute;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 use React\Http\Message\Response;
 use ReflectionAttribute;
@@ -30,7 +31,7 @@ use ReflectionParameter;
 use ReflectionUnionType;
 use ricardoboss\Console;
 
-class Minirouter
+class Minirouter implements LoggerAwareInterface
 {
     public const METHODS_ROUTE_KEY = '__METHOD__';
 
@@ -41,15 +42,21 @@ class Minirouter
 
     protected array $routeMap = [self::METHODS_ROUTE_KEY => []];
     protected GenericMap $dtos;
+    protected LoggerInterface $logger;
 
     public function __construct(
-        protected readonly string $appNamespace,
+        protected readonly string $anonymousRoutesNamespace,
     )
     {
         $this->dtos = new ArrayMap();
     }
 
-    public function mount(string $base, iterable $routes, LoggerInterface $logger): void
+    public function setLogger(LoggerInterface $logger): void
+    {
+        $this->logger = $logger;
+    }
+
+    public function mount(string $base, iterable $routes): void
     {
         $base = self::normalizePathPart($base);
 
@@ -59,9 +66,9 @@ class Minirouter
             } else {
                 if (is_string($route)) {
                     // qualify function name with app namespace so reflection works
-                    $route = $this->appNamespace . $route;
+                    $route = $this->anonymousRoutesNamespace . $route;
                 } else if (!is_callable($route)) {
-                    $logger->error(sprintf("Parameter <blue>\$routes</blue> may only contain callables or strings, <gray>%s</gray> given", get_debug_type($route)));
+                    $this->logger->error(sprintf("Parameter <blue>\$routes</blue> may only contain callables or strings, <gray>%s</gray> given", get_debug_type($route)));
 
                     continue;
                 }
@@ -69,17 +76,17 @@ class Minirouter
                 try {
                     $functionReflection = new ReflectionFunction($route);
                 } catch (ReflectionException $re) {
-                    $logger->error(sprintf("%s while accessing <green>%s</green>: %s", $re::class, is_string($route) ? ("function " . $route . "()") : $route, $re->getMessage()));
+                    $this->logger->error(sprintf("%s while accessing <green>%s</green>: %s", $re::class, is_string($route) ? ("function " . $route . "()") : $route, $re->getMessage()));
 
                     continue;
                 }
             }
 
-            $this->registerFunction($base, $functionReflection, $logger);
+            $this->registerFunction($base, $functionReflection);
         }
     }
 
-    public function mountController(string $base, string $class, LoggerInterface $logger): void
+    public function mountController(string $base, string $class): void
     {
         $base = self::normalizePathPart($base);
 
@@ -87,12 +94,12 @@ class Minirouter
             $classReflection = new ReflectionClass($class);
             $methods = array_filter($classReflection->getMethods(ReflectionMethod::IS_PUBLIC), static fn (ReflectionMethod $m) => !$m->isConstructor() && !$m->isDestructor());
         } catch (ReflectionException $re) {
-            $logger->error(sprintf("%s while accessing class <green>%s</green>: %s", $re::class, $class, $re->getMessage()));
+            $this->logger->error(sprintf("%s while accessing class <green>%s</green>: %s", $re::class, $class, $re->getMessage()));
 
             return;
         }
 
-        $this->mount($base, $methods, $logger);
+        $this->mount($base, $methods);
     }
 
     public function registerDto(string $dtoClass, ?callable $factory = null): void {
@@ -108,12 +115,12 @@ class Minirouter
         $this->dtos->put($dtoClass, $factory);
     }
 
-    protected function registerFunction(string $basePath, ReflectionFunctionAbstract $functionReflection, LoggerInterface $logger): void
+    protected function registerFunction(string $basePath, ReflectionFunctionAbstract $functionReflection): void
     {
         $attributes = $functionReflection->getAttributes(RouteAttribute::class, ReflectionAttribute::IS_INSTANCEOF);
 
         if (empty($attributes)) {
-            $logger->info("Function <green>{$functionReflection->getName()}</green> was mounted but has no HTTP method attributes.");
+            $this->logger->info("Function <green>{$functionReflection->getName()}</green> was mounted but has no HTTP method attributes.");
 
             return;
         }
@@ -147,15 +154,15 @@ class Minirouter
 
             /** @var RequestMethod $verb */
             foreach ($verbs as $verb) {
-                $success = $this->setVerbHandler($path, $verb->name, $closure, false, $logger);
+                $success = $this->setVerbHandler($path, $verb->name, $closure, false);
                 if (!$success) {
-                    $logger->warning("Handler for <magenta>$verb->name</magenta> <blue>$path</blue> already exists. Skipping.");
+                    $this->logger->warning("Handler for <magenta>$verb->name</magenta> <blue>$path</blue> already exists. Skipping.");
                 }
             }
         }
     }
 
-    protected function setVerbHandler(string $path, string $verb, Closure $closure, bool $overwrite, LoggerInterface $logger): ?bool
+    protected function setVerbHandler(string $path, string $verb, Closure $closure, bool $overwrite): ?bool
     {
         $destinationRoute = &$this->routeMap;
 
@@ -179,7 +186,7 @@ class Minirouter
                 return false; // handler for this route and verb already exists and should not be overwritten
             }
 
-            $logger->warning("Overwriting handler for <magenta>$verb</magenta> <blue>$path</blue>");
+            $this->logger->warning("Overwriting handler for <magenta>$verb</magenta> <blue>$path</blue>");
         }
 
         $destinationRoute[self::METHODS_ROUTE_KEY][$verb] = $closure;
@@ -187,8 +194,10 @@ class Minirouter
         return true;
     }
 
-    public function printRoutingTable(LoggerInterface $logger): void
+    public function printRoutingTable(?LoggerInterface $logger = null): void
     {
+        $logger ??= $this->logger;
+
         $logger->info("All available routes:");
         $table = [];
         $flattenMap = static function (array $map, array $path, callable $self) use (&$table): void {

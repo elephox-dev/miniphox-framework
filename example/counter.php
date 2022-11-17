@@ -10,24 +10,41 @@ use Elephox\Miniphox\Miniphox;
 use Elephox\Web\Routing\Attribute\Http\Get;
 use stdClass;
 
-#[Get('/count')]
-function counter(stdClass $counter): string
-{
-    // $counter will get injected from the service specified below
+// suppose we have these services:
 
-    return "The current count is $counter->i";
+class TransientCounter {
+    public int $value = 0;
 }
 
-$app = Miniphox::build()->mount('/api', counter(...));
+class SingletonCounter {
+    public int $value = 0;
+}
+
+// and this endpoint:
+
+#[Get('/count')]
+function count(TransientCounter $transientCounter, SingletonCounter $singletonCounter): array
+{
+    // The counters will get injected from the services specified below.
+
+    // Value will only increase above 1 on the singleton since the transient counter is re-created every time it is
+    // requested.
+    $transientCounter->value++;
+    $singletonCounter->value++;
+
+    return [
+        'transient' => $transientCounter->value,
+        'singleton' => $singletonCounter->value,
+    ];
+}
+
+// build the app and register our services
+$app = Miniphox::build()->mount('/api', count(...));
 
 // transient services get created every time they are requested (unlike singletons)
-$app->getServices()->addTransient(stdClass::class, stdClass::class, function () {
-    static $i; // this keeps track of how many times this services was created
+$app->getServices()->addTransient(TransientCounter::class, TransientCounter::class, fn() => new TransientCounter());
 
-    $counter = new stdClass();
-    $counter->i = ++$i;
-
-    return $counter;
-});
+// singleton services are only created once and are then kept in memory for repeated use of the same instance
+$app->getServices()->addSingleton(SingletonCounter::class, SingletonCounter::class, fn() => new SingletonCounter());
 
 $app->run();

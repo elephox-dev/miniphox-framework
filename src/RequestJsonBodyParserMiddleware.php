@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Elephox\Miniphox;
 
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use function explode;
 use function strtolower;
@@ -17,7 +18,7 @@ class RequestJsonBodyParserMiddleware
     {
     }
 
-    public function __invoke(ServerRequestInterface $request, $next)
+    public function __invoke(ServerRequestInterface $request, callable $next): ResponseInterface
     {
         $type = strtolower($request->getHeaderLine('Content-Type'));
         [$type] = explode(';', $type);

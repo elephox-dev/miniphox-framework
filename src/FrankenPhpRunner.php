@@ -1,4 +1,5 @@
 <?php
+/** @noinspection PhpUndefinedFunctionInspection */
 declare(strict_types=1);
 
 namespace Elephox\Miniphox;
@@ -12,11 +13,23 @@ trait FrankenPhpRunner
 {
     abstract public function handle(ServerRequestInterface $request): ResponseInterface;
 
-    public function run(): int {
+    protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface {
+        return $request;
+    }
+
+    protected function beforeResponseSent(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
+        return $response;
+    }
+
+    protected function afterResponseSent(ServerRequestInterface $request, ResponseInterface $response): void {}
+
+    public function runFrankenPhpServer(): int {
         do {
             $running = frankenphp_handle_request(function () {
                 $request = ServerRequestBuilder::fromGlobals();
+                $request = $this->beforeRequestHandling($request);
                 $response = $this->handle($request);
+                $response = $this->beforeResponseSent($request, $response);
 
                 http_response_code($response->getStatusCode());
 
@@ -25,6 +38,8 @@ trait FrankenPhpRunner
                 }
 
                 echo $response->getBody()->getContents();
+
+                $this->afterResponseSent($request, $response);
             });
         } while ($running);
 

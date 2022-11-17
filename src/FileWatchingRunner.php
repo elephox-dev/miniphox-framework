@@ -13,6 +13,7 @@ use Elephox\Files\File;
 use Elephox\Files\FileWatcher;
 use Elephox\Files\Link;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
 trait FileWatchingRunner
@@ -30,9 +31,41 @@ trait FileWatchingRunner
         });
     }
 
-    abstract public function getLogger(): LoggerInterface;
+    abstract protected function getLogger(): LoggerInterface;
 
-    abstract public function getNoWatchCommandLine(): array;
+    abstract protected function runServerProcess(): int;
+
+    public function runFileWatcher(): int
+    {
+        if (!$this->shouldWatch()) {
+            $this->getRouter()->printRoutingTable($this->getLogger());
+
+            $httpHost = $this->getHost() === '0.0.0.0' ? 'localhost' : $this->getHost();
+            $httpPort = $this->getPort() === 80 ? '' : ":{$this->getPort()}";
+            $this->getLogger()->info("Running HTTP server at <blue><underline>http://$httpHost$httpPort</underline></blue>");
+
+            return $this->runServerProcess();
+        }
+
+        return $this->runWatcherProcess();
+    }
+
+    protected function shouldWatch(): bool {
+        global $argv;
+
+        if (in_array('--no-watch', $argv, true)) {
+            return false;
+        }
+
+        return $this->watchedNodes->isNotEmpty();
+    }
+
+    protected function getNoWatchCommandLine(): array
+    {
+        global $argv;
+
+        return [(new PhpExecutableFinder())->find(false), ...$argv, '--no-watch'];
+    }
 
     public function watch(string|FileContract|DirectoryContract ...$nodes): self {
         foreach ($nodes as $node) {
@@ -42,7 +75,7 @@ trait FileWatchingRunner
         return $this;
     }
 
-    public function run(): int
+    private function runWatcherProcess(): int
     {
         $process = null;
         $runPhpServerProcess = function () use (&$process) {
