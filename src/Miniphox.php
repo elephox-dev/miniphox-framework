@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace Elephox\Miniphox;
 
 use Elephox\DI\Contract\ServiceCollection;
+use Elephox\Miniphox\Runner\FileWatchingRunner;
+use Elephox\Miniphox\Runner\ReactPhpRunner;
+use Elephox\Miniphox\Runner\RunnerInterface;
 
 class Miniphox extends MiniphoxBase implements RunnerInterface
 {

@@ -1,10 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Elephox\Miniphox;
+namespace Elephox\Miniphox\Runner;
 
 use Elephox\Collection\ArraySet;
 use Elephox\DI\Contract\ServiceCollection;
+use Elephox\Miniphox\Middleware\RequestJsonBodyParserMiddleware;
+use Elephox\Miniphox\Middleware\RequestLoggerMiddleware;
+use Elephox\Miniphox\Middleware\StaticFileServerMiddleware;
+use Elephox\Miniphox\Minirouter;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
@@ -82,15 +86,11 @@ trait ReactPhpRunner
 
     abstract public function handle(ServerRequestInterface $request): ResponseInterface;
 
-    protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface {
-        return $request;
-    }
+    abstract protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface;
 
-    protected function beforeResponseSent(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        return $response;
-    }
+    abstract protected function beforeResponseSent(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface;
 
-    protected function afterResponseSent(ServerRequestInterface $request, ResponseInterface $response): void {}
+    abstract protected function afterResponseSent(ServerRequestInterface $request, ResponseInterface $response): void;
 
     public function runReactServer(): int {
         $host = $this->getHost();

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Elephox\Miniphox;
+namespace Elephox\Miniphox\Middleware;
 
 use Elephox\DI\Contract\ServiceCollection;
 use Elephox\Logging\Contract\SinkLogger;

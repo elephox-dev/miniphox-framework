@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-use Elephox\Miniphox\FrankenPhpRunner;
 use Elephox\Miniphox\MiniphoxBase;
-use Elephox\Miniphox\RunnerInterface;
+use Elephox\Miniphox\Runner\FrankenPhpRunner;
+use Elephox\Miniphox\Runner\RunnerInterface;
 use Elephox\Web\Routing\Attribute\Http\Get;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';

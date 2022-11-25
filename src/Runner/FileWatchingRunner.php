@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Elephox\Miniphox;
+namespace Elephox\Miniphox\Runner;
 
 use Elephox\Collection\ArraySet;
 use Elephox\Collection\DefaultEqualityComparer;

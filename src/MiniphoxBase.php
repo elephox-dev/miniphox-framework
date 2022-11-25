@@ -12,6 +12,7 @@ use Elephox\Logging\SimpleFormatColorSink;
 use Elephox\Logging\SingleSinkLogger;
 use Elephox\Logging\StandardSink;
 use Elephox\OOR\Casing;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;

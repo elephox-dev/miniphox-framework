@@ -2,7 +2,7 @@
 /** @noinspection PhpUndefinedFunctionInspection */
 declare(strict_types=1);
 
-namespace Elephox\Miniphox;
+namespace Elephox\Miniphox\Runner;
 
 use Elephox\Http\ServerRequestBuilder;
 use Psr\Http\Message\ResponseInterface;
@@ -13,15 +13,11 @@ trait FrankenPhpRunner
 {
     abstract public function handle(ServerRequestInterface $request): ResponseInterface;
 
-    protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface {
-        return $request;
-    }
+    abstract protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface;
 
-    protected function beforeResponseSent(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface {
-        return $response;
-    }
+    abstract protected function beforeResponseSent(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface;
 
-    protected function afterResponseSent(ServerRequestInterface $request, ResponseInterface $response): void {}
+    abstract protected function afterResponseSent(ServerRequestInterface $request, ResponseInterface $response): void;
 
     public function runFrankenPhpServer(): int {
         do {
