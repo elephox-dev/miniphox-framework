@@ -17,6 +17,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Stringable;
 use Throwable;
 
@@ -110,23 +111,20 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
             } else if ($result instanceof ResponseInterface) {
                 $response = $result;
             } else {
-                $this->getLogger()->error(sprintf("Unable to infer response from type %s. Please return a string, array or instance of %s", get_debug_type($result), ResponseInterface::class));
-
-                return $this->handleInternalServerError($request);
+                throw new RuntimeException(sprintf("Unable to infer response from type %s. Please return a string, array or instance of %s", get_debug_type($result), ResponseInterface::class));
             }
 
             return $response;
         } catch (Throwable $e) {
             $this->getLogger()->error($e);
 
-            return $this->handleInternalServerError($request);
+            return $this->handleInternalServerError($request, $e);
         }
     }
 
-    protected function handleInternalServerError(ServerRequestInterface $request): ResponseInterface
+    protected function handleInternalServerError(ServerRequestInterface $request, ?Throwable $cause): ResponseInterface
     {
         return Response::build()
-            ->textBody("Unable to handle request.")
             ->responseCode(ResponseCode::InternalServerError)
             ->get();
     }
