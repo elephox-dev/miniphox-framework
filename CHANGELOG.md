@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 0.7.0
+-------------
+
+* Refactored runner traits into their own namespace
+* Refactored middlewares into their own namespace
+* Current request is now added as a service and removed afterwards
+
 Version 0.6.0
 -------------
 
