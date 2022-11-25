@@ -131,6 +131,9 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
     }
 
     protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface {
+        $this->services->addSingleton(ServerRequestInterface::class, instance: $request, replace: true);
+        $this->services->addSingleton(RequestInterface::class, instance: $request, replace: true);
+
         return $request;
     }
 
@@ -139,5 +142,7 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface
     }
 
     protected function afterResponseSent(ServerRequestInterface $request, ResponseInterface $response): void {
+        $this->services->removeService(RequestInterface::class);
+        $this->services->removeService(ServerRequestInterface::class);
     }
 }
