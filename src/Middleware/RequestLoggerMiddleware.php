@@ -39,19 +39,21 @@ class RequestLoggerMiddleware {
             $processingTimeSeconds = microtime(true) - $requestStart;
         }
 
+        $method = $request->getMethod();
         $statusCode = $response->getStatusCode();
         $path = $request->getUri()->getPath();
         $location = $response->getHeader('Location')[0] ?? null;
 
-        $message = $this->formatMessage($statusCode, $path, $location, $processingTimeSeconds ?? null);
+        $message = $this->formatMessage($method, $statusCode, $path, $location, $processingTimeSeconds ?? null);
 
         $this->logger->info($message);
     }
 
-    private function formatMessage(int $statusCode, string $path, ?string $location, ?float $processingTimeSeconds): string
+    private function formatMessage(string $method, int $statusCode, string $path, ?string $location, ?float $processingTimeSeconds): string
     {
-        $format = '%s -> %s';
+        $format = '%s %s -> %s';
         $args = [
+            $this->formatMethod($method),
             $this->formatPath($path),
             $this->formatStatusCode($statusCode),
         ];
@@ -69,12 +71,29 @@ class RequestLoggerMiddleware {
         return sprintf($format, ...$args);
     }
 
+    private function formatMethod(string $method): string {
+        if (!$this->enhanced) {
+            return $method;
+        }
+
+        $methodColor = match (strtolower($method)) {
+            'get' => 'green',
+            'post' => 'yellow',
+            'put' => 'blue',
+            'delete' => 'red',
+            'options' => 'gray',
+            default => 'white',
+        };
+
+        return sprintf('<inverse><%s>%s</%1$s></inverse>', $methodColor, $method);
+    }
+
     private function formatPath(string $path): string {
         if (!$this->enhanced) {
             return $path;
         }
 
-        return sprintf('<blue>%s</blue>', $path);
+        return sprintf('<blue><underline>%s</underline></blue>', $path);
     }
 
     private function formatStatusCode(int $statusCode): string {
