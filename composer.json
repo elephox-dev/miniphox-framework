@@ -14,7 +14,8 @@
     "elephox/framework": "dev-develop",
     "react/http": "^1.8",
     "ricardoboss/php-console-logger": "^2.4",
-    "psr/http-server-handler": "^1.0"
+    "psr/http-server-handler": "^1.0",
+    "fruitcake/php-cors": "dev-feature/psr-7-rewrite"
   },
   "provide": {
     "psr/http-server-handler-implementation": "1.0"
@@ -24,6 +25,17 @@
   "autoload": {
     "psr-4": {
       "Elephox\\Miniphox\\": "src/"
+    }
+  },
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/elephox-dev/php-cors-psr-7"
+    }
+  ],
+  "config": {
+    "allow-plugins": {
+      "symfony/runtime": true
     }
   }
 }
