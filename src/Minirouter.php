@@ -43,12 +43,18 @@ class Minirouter implements LoggerAwareInterface
     protected array $routeMap = [self::METHODS_ROUTE_KEY => []];
     protected GenericMap $dtos;
     protected LoggerInterface $logger;
+    protected bool $allowOptionsRequests;
 
     public function __construct(
         protected readonly string $anonymousRoutesNamespace,
     )
     {
         $this->dtos = new ArrayMap();
+    }
+
+    public function setAllowOptionsRequests(bool $allow): void
+    {
+        $this->allowOptionsRequests = $allow;
     }
 
     public function setLogger(LoggerInterface $logger): void
@@ -190,6 +196,10 @@ class Minirouter implements LoggerAwareInterface
         }
 
         $destinationRoute[self::METHODS_ROUTE_KEY][$verb] = $closure;
+
+        if ($this->allowOptionsRequests) {
+            $destinationRoute[self::METHODS_ROUTE_KEY]['OPTIONS'] = $closure;
+        }
 
         return true;
     }

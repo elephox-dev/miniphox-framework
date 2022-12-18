@@ -15,7 +15,8 @@
     "react/http": "^1.8",
     "ricardoboss/php-console-logger": "^2.4",
     "psr/http-server-handler": "^1.0",
-    "fruitcake/php-cors": "dev-feature/psr-7-rewrite"
+    "fruitcake/php-cors": "dev-feature/psr-7-rewrite",
+    "psr/http-server-middleware": "^1.0"
   },
   "provide": {
     "psr/http-server-handler-implementation": "1.0"

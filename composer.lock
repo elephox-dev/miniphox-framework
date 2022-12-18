@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ad7fbe673cc447615852f93ef7e2570b",
+    "content-hash": "6b40ffae6f012fb8782a6cf2bbc0bcd6",
     "packages": [
         {
             "name": "elephox/framework",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/elephox-dev/framework.git",
-                "reference": "9dc25dfaf95487b98a1996a77b47d04af85fa66e"
+                "reference": "ece31f12904b48043b5a9c5830cab2f3cd8fb77c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elephox-dev/framework/zipball/9dc25dfaf95487b98a1996a77b47d04af85fa66e",
-                "reference": "9dc25dfaf95487b98a1996a77b47d04af85fa66e",
+                "url": "https://api.github.com/repos/elephox-dev/framework/zipball/ece31f12904b48043b5a9c5830cab2f3cd8fb77c",
+                "reference": "ece31f12904b48043b5a9c5830cab2f3cd8fb77c",
                 "shasum": ""
             },
             "require": {
@@ -136,7 +136,7 @@
                 "issues": "https://github.com/elephox-dev/framework/issues",
                 "source": "https://github.com/elephox-dev/framework"
             },
-            "time": "2022-12-15T07:12:34+00:00"
+            "time": "2022-12-17T15:45:33+00:00"
         },
         {
             "name": "elephox/mimey",
@@ -992,6 +992,63 @@
                 "source": "https://github.com/php-fig/http-server-handler/tree/master"
             },
             "time": "2018-10-30T16:46:14+00:00"
+        },
+        {
+            "name": "psr/http-server-middleware",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-server-middleware.git",
+                "reference": "2296f45510945530b9dceb8bcedb5cb84d40c5f5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-server-middleware/zipball/2296f45510945530b9dceb8bcedb5cb84d40c5f5",
+                "reference": "2296f45510945530b9dceb8bcedb5cb84d40c5f5",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0",
+                "psr/http-message": "^1.0",
+                "psr/http-server-handler": "^1.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Server\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP server-side middleware",
+            "keywords": [
+                "http",
+                "http-interop",
+                "middleware",
+                "psr",
+                "psr-15",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "support": {
+                "issues": "https://github.com/php-fig/http-server-middleware/issues",
+                "source": "https://github.com/php-fig/http-server-middleware/tree/master"
+            },
+            "time": "2018-10-30T17:12:04+00:00"
         },
         {
             "name": "psr/log",

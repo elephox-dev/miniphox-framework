@@ -5,10 +5,12 @@ namespace Elephox\Miniphox\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use function explode;
 use function strtolower;
 
-class RequestJsonBodyParserMiddleware
+class RequestJsonBodyParserMiddleware implements MiddlewareInterface
 {
     public function __construct(
         private readonly bool $associative = true,
@@ -18,16 +20,16 @@ class RequestJsonBodyParserMiddleware
     {
     }
 
-    public function __invoke(ServerRequestInterface $request, callable $next): ResponseInterface
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         $type = strtolower($request->getHeaderLine('Content-Type'));
         [$type] = explode(';', $type);
 
         if ($type === 'application/json') {
-            return $next($this->parseJsonEncoded($request));
+            return $handler->handle($this->parseJsonEncoded($request));
         }
 
-        return $next($request);
+        return $handler->handle($request);
     }
 
     private function parseJsonEncoded(ServerRequestInterface $request): ServerRequestInterface

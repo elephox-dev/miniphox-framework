@@ -5,12 +5,11 @@ namespace Elephox\Miniphox\Runner;
 
 use Elephox\Collection\ArraySet;
 use Elephox\DI\Contract\ServiceCollection;
-use Elephox\Miniphox\Middleware\RequestJsonBodyParserMiddleware;
-use Elephox\Miniphox\Middleware\RequestLoggerMiddleware;
-use Elephox\Miniphox\Middleware\StaticFileServerMiddleware;
+use Elephox\Miniphox\Middleware\InvokableMiddleware;
 use Elephox\Miniphox\Minirouter;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
@@ -26,20 +25,11 @@ trait ReactPhpRunner
 
     private int $port = 8008;
 
-    private readonly ArraySet $middlewares;
-
     private LoopInterface $loop;
 
     public function __construct()
     {
         $this->loop = Loop::get();
-
-        $this->middlewares = new ArraySet([
-            new LimitConcurrentRequestsMiddleware(100),
-            new RequestBodyParserMiddleware(),
-            new RequestJsonBodyParserMiddleware(),
-            new RequestLoggerMiddleware($this->getServices()),
-        ]);
     }
 
     abstract public function getRouter(): Minirouter;
@@ -48,10 +38,8 @@ trait ReactPhpRunner
 
     abstract public function getServices(): ServiceCollection;
 
-    public function getMiddlewares(): ArraySet
-    {
-        return $this->middlewares;
-    }
+    /** @return ArraySet<MiddlewareInterface> */
+    abstract public function getMiddlewares(): ArraySet;
 
     public function setHost(string $host): self
     {
@@ -77,13 +65,6 @@ trait ReactPhpRunner
         return $this->port;
     }
 
-    public function staticFiles(string $root): static
-    {
-        $this->middlewares->add(new StaticFileServerMiddleware($root));
-
-        return $this;
-    }
-
     abstract public function handle(ServerRequestInterface $request): ResponseInterface;
 
     abstract protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface;
@@ -101,7 +82,16 @@ trait ReactPhpRunner
         $socket = new SocketServer($uri);
         $socket->on('error', fn(Throwable $error) => $this->getLogger()->error($error));
 
-        $http = new HttpServer(...$this->getMiddlewares()->append($this->reactPhpHandler(...))->toList());
+        $middlewares = $this->getMiddlewares()
+            ->select(static fn (MiddlewareInterface $m) => new InvokableMiddleware($m))
+            ->prependAll([
+                new LimitConcurrentRequestsMiddleware(100),
+                new RequestBodyParserMiddleware(),
+            ])
+            ->append($this->reactPhpHandler(...))
+            ->toList();
+
+        $http = new HttpServer(...$middlewares);
         $http->on('error', fn(Throwable $error) => $this->getLogger()->error($error));
         $http->listen($socket);
 

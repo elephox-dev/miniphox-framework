@@ -30,5 +30,7 @@ class MyController {
 }
 
 Miniphox::build()
+    ->logRequests()
+    ->cors('/greet*', ['allowedMethods' => ['GET'], 'allowedOrigins' => ['http://localhost:8008']])
     ->mountController('/greet', MyController::class)
     ->run();
