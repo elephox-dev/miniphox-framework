@@ -43,7 +43,7 @@ class Minirouter implements LoggerAwareInterface
     protected array $routeMap = [self::METHODS_ROUTE_KEY => []];
     protected GenericMap $dtos;
     protected LoggerInterface $logger;
-    protected bool $allowOptionsRequests;
+    protected bool $allowOptionsRequests = false;
 
     public function __construct(
         protected readonly string $anonymousRoutesNamespace,
