@@ -12,11 +12,11 @@ use Elephox\Logging\EnhancedMessageSink;
 use Elephox\Logging\SimpleFormatColorSink;
 use Elephox\Logging\SingleSinkLogger;
 use Elephox\Logging\StandardSink;
-use Elephox\Miniphox\Middleware\CorsOptions;
 use Elephox\Miniphox\Middleware\CorsPolicyMiddleware;
 use Elephox\Miniphox\Middleware\RequestJsonBodyParserMiddleware;
 use Elephox\Miniphox\Middleware\RequestLoggerMiddleware;
 use Elephox\Miniphox\Middleware\StaticFileServerMiddleware;
+use Elephox\Miniphox\Services\DtoResolverService;
 use Elephox\OOR\Casing;
 use Fruitcake\Cors\CorsService;
 use JetBrains\PhpStorm\ArrayShape;
@@ -56,9 +56,10 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
         $routesNamespace = self::normalizeNamespace($routesNamespace);
 
         $this->services = $services ?? new ServiceCollection();
-        $this->services->addSingleton(LoggerInterface::class, SingleSinkLogger::class, fn(): SingleSinkLogger => new SingleSinkLogger(new EnhancedMessageSink(new SimpleFormatColorSink(new StandardSink()))));
-        $this->services->addSingleton(Minirouter::class, Minirouter::class, function (LoggerInterface $logger) use ($routesNamespace) {
-            $router = new Minirouter($routesNamespace);
+        $this->services->addSingleton(LoggerInterface::class, SingleSinkLogger::class, fn (): SingleSinkLogger => new SingleSinkLogger(new EnhancedMessageSink(new SimpleFormatColorSink(new StandardSink()))));
+        $this->services->addSingleton(DtoResolverService::class, DtoResolverService::class, fn (): DtoResolverService => new DtoResolverService());
+        $this->services->addSingleton(Minirouter::class, Minirouter::class, function (LoggerInterface $logger, DtoResolverService $dtoResolver) use ($routesNamespace) {
+            $router = new Minirouter($routesNamespace, $dtoResolver);
             $router->setLogger($logger);
             return $router;
         });

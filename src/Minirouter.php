@@ -4,14 +4,12 @@ declare(strict_types=1);
 namespace Elephox\Miniphox;
 
 use Closure;
-use Elephox\Collection\AmbiguousMatchException;
-use Elephox\Collection\ArrayMap;
-use Elephox\Collection\Contract\GenericMap;
 use Elephox\Collection\KeyedEnumerable;
 use Elephox\DI\Contract\Resolver;
 use Elephox\DI\Contract\ServiceCollection;
 use Elephox\DI\UnresolvedParameterException;
 use Elephox\Http\RequestMethod;
+use Elephox\Miniphox\Services\DtoResolverService;
 use Elephox\Web\Routing\Attribute\Contract\RouteAttribute;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -24,11 +22,8 @@ use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
-use ReflectionIntersectionType;
 use ReflectionMethod;
-use ReflectionNamedType;
 use ReflectionParameter;
-use ReflectionUnionType;
 use ricardoboss\Console;
 
 class Minirouter implements LoggerAwareInterface
@@ -41,15 +36,14 @@ class Minirouter implements LoggerAwareInterface
     }
 
     protected array $routeMap = [self::METHODS_ROUTE_KEY => []];
-    protected GenericMap $dtos;
     protected LoggerInterface $logger;
     protected bool $allowOptionsRequests = false;
 
     public function __construct(
         protected readonly string $anonymousRoutesNamespace,
+        protected readonly DtoResolverService $dtoResolverService,
     )
     {
-        $this->dtos = new ArrayMap();
     }
 
     public function setAllowOptionsRequests(bool $allow): void
@@ -108,17 +102,10 @@ class Minirouter implements LoggerAwareInterface
         $this->mount($base, $methods);
     }
 
-    public function registerDto(string $dtoClass, ?callable $factory = null): void {
-        $factory ??= static function (ServerRequestInterface $request, array $routeParams, Resolver $resolver) use ($dtoClass) {
-            $body = $request->getParsedBody();
-            if (!is_array($body)) {
-                $body = [];
-            }
+    public function registerDto(string $dtoClass, ?callable $factory = null): self {
+        $this->dtoResolverService->registerDto($dtoClass, $factory);
 
-            return $resolver->instantiate($dtoClass, ['request' => $request, 'routeParams' => $routeParams, ...$routeParams, ...$body]);
-        };
-
-        $this->dtos->put($dtoClass, $factory);
+        return $this;
     }
 
     protected function registerFunction(string $basePath, ReflectionFunctionAbstract $functionReflection): void
@@ -291,7 +278,9 @@ class Minirouter implements LoggerAwareInterface
                 function (ReflectionParameter $parameter) use ($resolver, $request, $routeParams, &$unresolvedDynamicParameter): mixed
                 {
                     try {
-                        return $this->resolveDynamicParameter($parameter, $resolver, $request, $routeParams);
+                        $dtoFactory = $this->dtoResolverService->getMatchingDtoFactory($parameter);
+                        $factoryArgs = $this->getHandlerArgs($request, $routeParams);
+                        return $resolver->callback($dtoFactory, $factoryArgs);
                     } catch (UnresolvedParameterException) {
                         $unresolvedDynamicParameter = true;
 
@@ -310,51 +299,6 @@ class Minirouter implements LoggerAwareInterface
 
     protected function getHandlerArgs(ServerRequestInterface $request, array $routeParams): array {
         return  ['request' => $request, 'routeParams' => $routeParams, ...$routeParams];
-    }
-
-    protected function resolveDynamicParameter(ReflectionParameter $parameter, Resolver $resolver, ServerRequestInterface $request, array $routeParams): mixed {
-        $type = $parameter->getType();
-        if ($type instanceof ReflectionIntersectionType) {
-            assert(false, "ReflectionIntersectionTypes are not supported yet");
-        } else if ($type instanceof ReflectionNamedType) {
-            $types = [$type];
-        } else if ($type instanceof ReflectionUnionType) {
-            $types = $type->getTypes();
-        } else {
-            throw new UnresolvedParameterException(
-                $parameter->getDeclaringClass()?->getName() ?? '<unknown>',
-                $parameter->getDeclaringFunction()->getName(),
-                $parameter->getType()?->getName() ?? 'mixed',
-                $parameter->getName(),
-            );
-        }
-
-        assert(!empty($types));
-
-        $typeCollection = collect(...$types)->toArrayList();
-        $possibleDtos = $this->dtos
-            ->keys()
-            ->where(fn (string $className) => $typeCollection->any(fn (ReflectionNamedType $type) => $type->getName() === $className))
-            ->toArrayList();
-
-        if ($possibleDtos->isEmpty()) {
-            throw new UnresolvedParameterException(
-                $parameter->getDeclaringClass()?->getName() ?? '<unknown>',
-                $parameter->getDeclaringFunction()->getName(),
-                $parameter->getType()?->getName() ?? 'mixed',
-                $parameter->getName(),
-            );
-        }
-
-        if ($possibleDtos->count() > 1) {
-            throw new AmbiguousMatchException();
-        }
-
-        /** @var class-string $dtoClass */
-        $dtoClass = $possibleDtos->pop();
-        $factory = $this->dtos->get($dtoClass);
-
-        return $resolver->callback($factory, $this->getHandlerArgs($request, $routeParams));
     }
 
     protected function handleNotFound(ServerRequestInterface $request): ResponseInterface
