@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/elephox-dev/framework.git",
-                "reference": "ece31f12904b48043b5a9c5830cab2f3cd8fb77c"
+                "reference": "4e1d552ab31047b963e0133222e4910db41dfb5c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elephox-dev/framework/zipball/ece31f12904b48043b5a9c5830cab2f3cd8fb77c",
-                "reference": "ece31f12904b48043b5a9c5830cab2f3cd8fb77c",
+                "url": "https://api.github.com/repos/elephox-dev/framework/zipball/4e1d552ab31047b963e0133222e4910db41dfb5c",
+                "reference": "4e1d552ab31047b963e0133222e4910db41dfb5c",
                 "shasum": ""
             },
             "require": {
@@ -136,7 +136,7 @@
                 "issues": "https://github.com/elephox-dev/framework/issues",
                 "source": "https://github.com/elephox-dev/framework"
             },
-            "time": "2022-12-17T15:45:33+00:00"
+            "time": "2023-01-07T03:27:57+00:00"
         },
         {
             "name": "elephox/mimey",
