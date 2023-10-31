@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.8.6
+-------------
+
+* Fix issue with chained constructor calls in service resolving
+
 Version 0.8.5
 -------------
 
