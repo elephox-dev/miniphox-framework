@@ -1,6 +1,32 @@
 Changelog
 =========
 
+Version 0.8.3
+-------------
+
+* Updated packages
+
+Version 0.8.2
+-------------
+
+* Moved DTO resolution logic into its own service
+* Updated packages
+
+Version 0.8.1
+-------------
+
+* Fix issue with uninitialized class property
+
+Version 0.8.0
+-------------
+
+* Updated project files
+* Implemented CORS middleware
+* Use fruitcake/php-cors fork
+* Started work on CORS middleware
+* Log request method
+* Updated packages
+
 Version 0.7.0
 -------------
 
