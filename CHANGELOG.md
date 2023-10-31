@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.8.4
+-------------
+
+* Updated packages
+* Added new services: `LoggerProviderService` and `RequestProviderService`
+
 Version 0.8.3
 -------------
 
