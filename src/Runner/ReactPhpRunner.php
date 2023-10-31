@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Elephox\Miniphox\Runner;
 
 use Elephox\Collection\ArraySet;
-use Elephox\DI\Contract\ServiceCollection;
+use Elephox\DI\Contract\ServiceProvider;
 use Elephox\Miniphox\Middleware\InvokableMiddleware;
 use Elephox\Miniphox\Minirouter;
 use Psr\Http\Message\ResponseInterface;
@@ -36,7 +36,7 @@ trait ReactPhpRunner
 
     abstract public function getLogger(): LoggerInterface;
 
-    abstract public function getServices(): ServiceCollection;
+    abstract public function getServices(): ServiceProvider;
 
     /** @return ArraySet<MiddlewareInterface> */
     abstract public function getMiddlewares(): ArraySet;
