@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Elephox\Miniphox\Runner;
 
 use Elephox\Collection\ArraySet;
-use Elephox\Collection\DefaultEqualityComparer;
 use Elephox\Files\Contract\Directory as DirectoryContract;
 use Elephox\Files\Contract\File as FileContract;
 use Elephox\Files\Contract\FileChangedEvent;
@@ -22,13 +21,7 @@ trait FileWatchingRunner
 
     public function __construct()
     {
-        $this->watchedNodes = new ArraySet(comparer: function (mixed $a, mixed $b): bool {
-            if (is_string($a) && is_string($b)) {
-                return DefaultEqualityComparer::equalsIgnoreCase($a, $b);
-            }
-
-            return DefaultEqualityComparer::same($a, $b);
-        });
+        $this->watchedNodes = new ArraySet();
     }
 
     abstract protected function getLogger(): LoggerInterface;

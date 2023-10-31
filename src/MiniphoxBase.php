@@ -94,8 +94,8 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
         array $options,
     ): static
     {
-        if ($this->services->hasService(CorsService::class)) {
-            $corsService = $this->services->requireService(CorsService::class);
+        if ($this->services->has(CorsService::class)) {
+            $corsService = $this->services->get(CorsService::class);
         } else {
             $corsService = new CorsService($this, $options);
         }
@@ -132,17 +132,17 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
 
     public function setLogger(LoggerInterface $logger): void
     {
-        $this->services->addSingleton(LoggerInterface::class, instance: $logger, replace: true);
+        $this->services->addSingleton(LoggerInterface::class, instance: $logger);
     }
 
     protected function getLogger(): LoggerInterface
     {
-        return $this->services->requireService(LoggerInterface::class);
+        return $this->services->get(LoggerInterface::class);
     }
 
     protected function getRouter(): Minirouter
     {
-        return $this->services->requireService(Minirouter::class);
+        return $this->services->get(Minirouter::class);
     }
 
     public function getServices(): ServiceCollectionContract
@@ -208,8 +208,8 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
     }
 
     protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface {
-        $this->services->addSingleton(ServerRequestInterface::class, instance: $request, replace: true);
-        $this->services->addSingleton(RequestInterface::class, instance: $request, replace: true);
+        $this->services->addSingleton(ServerRequestInterface::class, instance: $request);
+        $this->services->addSingleton(RequestInterface::class, instance: $request);
 
         return $request;
     }
@@ -219,8 +219,8 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
     }
 
     protected function afterResponseSent(ServerRequestInterface $request, ResponseInterface $response): void {
-        $this->services->removeService(RequestInterface::class);
-        $this->services->removeService(ServerRequestInterface::class);
+        $this->services->remove(RequestInterface::class);
+        $this->services->remove(ServerRequestInterface::class);
     }
 
     public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface

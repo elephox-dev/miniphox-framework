@@ -10,7 +10,7 @@ use Elephox\DI\Contract\ServiceCollection;
 use Elephox\DI\UnresolvedParameterException;
 use Elephox\Http\RequestMethod;
 use Elephox\Miniphox\Services\DtoResolverService;
-use Elephox\Web\Routing\Attribute\Contract\RouteAttribute;
+use Elephox\Web\Routing\Attribute\Contract\ActionAttribute;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -110,7 +110,7 @@ class Minirouter implements LoggerAwareInterface
 
     protected function registerFunction(string $basePath, ReflectionFunctionAbstract $functionReflection): void
     {
-        $attributes = $functionReflection->getAttributes(RouteAttribute::class, ReflectionAttribute::IS_INSTANCEOF);
+        $attributes = $functionReflection->getAttributes(ActionAttribute::class, ReflectionAttribute::IS_INSTANCEOF);
 
         if (empty($attributes)) {
             $this->logger->info("Function <green>{$functionReflection->getName()}</green> was mounted but has no HTTP method attributes.");
@@ -121,7 +121,7 @@ class Minirouter implements LoggerAwareInterface
         foreach ($attributes as $attribute) {
             $attributeInstance = $attribute->newInstance();
 
-            assert($attributeInstance instanceof RouteAttribute);
+            assert($attributeInstance instanceof ActionAttribute);
 
             $attributePath = '/' . $attributeInstance->getPath();
             $path = $basePath . $attributePath;
@@ -136,11 +136,11 @@ class Minirouter implements LoggerAwareInterface
                     $controllerClass = $functionReflection->getDeclaringClass();
                     $controllerClassName = $controllerClass->getName();
 
-                    if (!$services->hasService($controllerClassName)) {
+                    if (!$services->has($controllerClassName)) {
                         $services->addSingleton($controllerClassName, $controllerClassName);
                     }
 
-                    $controller = $services->requireService($controllerClassName);
+                    $controller = $services->get($controllerClassName);
                     return $functionReflection->getClosure($controller);
                 };
             }
@@ -261,7 +261,7 @@ class Minirouter implements LoggerAwareInterface
         }
 
         $callbackFactory = $availableMethods[$method];
-        $callback = $resolver->callback($callbackFactory);
+        $callback = $resolver->call($callbackFactory);
 
         if (RequestMethod::from($method)->canHaveBody()) {
             $body = $request->getParsedBody();
@@ -280,7 +280,7 @@ class Minirouter implements LoggerAwareInterface
                     try {
                         $dtoFactory = $this->dtoResolverService->getMatchingDtoFactory($parameter);
                         $factoryArgs = $this->getHandlerArgs($request, $routeParams);
-                        return $resolver->callback($dtoFactory, $factoryArgs);
+                        return $resolver->call($dtoFactory, $factoryArgs);
                     } catch (UnresolvedParameterException) {
                         $unresolvedDynamicParameter = true;
 

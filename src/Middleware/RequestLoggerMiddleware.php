@@ -21,7 +21,7 @@ class RequestLoggerMiddleware implements MiddlewareInterface
         ServiceCollection $services,
     )
     {
-        $this->logger = $services->requireService(LoggerInterface::class);
+        $this->logger = $services->get(LoggerInterface::class);
         $this->enhanced = $this->logger instanceof SinkLogger && $this->logger->hasCapability(SinkCapability::ElephoxFormatting);
     }
 
