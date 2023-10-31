@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.8.5
+-------------
+
+* Update interface for `ReactPhpRunner`
+
 Version 0.8.4
 -------------
 
