@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Elephox\Miniphox\Middleware;
 
-use Elephox\DI\Contract\ServiceCollection;
+use Elephox\DI\Contract\ServiceProvider;
 use Elephox\Logging\Contract\SinkLogger;
 use Elephox\Logging\SinkCapability;
 use Psr\Http\Message\ResponseInterface;
@@ -18,7 +18,7 @@ class RequestLoggerMiddleware implements MiddlewareInterface
     private readonly bool $enhanced;
 
     public function __construct(
-        ServiceCollection $services,
+        ServiceProvider $services,
     )
     {
         $this->logger = $services->get(LoggerInterface::class);

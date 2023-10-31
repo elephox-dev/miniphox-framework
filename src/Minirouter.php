@@ -6,7 +6,7 @@ namespace Elephox\Miniphox;
 use Closure;
 use Elephox\Collection\KeyedEnumerable;
 use Elephox\DI\Contract\Resolver;
-use Elephox\DI\Contract\ServiceCollection;
+use Elephox\DI\Contract\ServiceProvider;
 use Elephox\DI\UnresolvedParameterException;
 use Elephox\Http\RequestMethod;
 use Elephox\Miniphox\Services\DtoResolverService;
@@ -130,17 +130,12 @@ class Minirouter implements LoggerAwareInterface
             if ($functionReflection instanceof ReflectionFunction || $functionReflection->isStatic()) {
                 $closure = static fn () => $functionReflection->getClosure();
             } else {
-                $closure = static function (ServiceCollection $services) use ($functionReflection): Closure {
+                $closure = static function (ServiceProvider $services) use ($functionReflection): Closure {
                     assert($functionReflection instanceof ReflectionMethod);
 
                     $controllerClass = $functionReflection->getDeclaringClass();
                     $controllerClassName = $controllerClass->getName();
-
-                    if (!$services->has($controllerClassName)) {
-                        $services->addSingleton($controllerClassName, $controllerClassName);
-                    }
-
-                    $controller = $services->get($controllerClassName);
+                    $controller = $services->get(Resolver::class)->instantiate($controllerClassName);
                     return $functionReflection->getClosure($controller);
                 };
             }

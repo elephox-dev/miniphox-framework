@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace Elephox\Miniphox;
 
 use Elephox\Collection\ArraySet;
+use Elephox\DI\Contract\Resolver;
 use Elephox\DI\Contract\ServiceCollection as ServiceCollectionContract;
+use Elephox\DI\Contract\ServiceProvider as ServiceProviderContract;
 use Elephox\DI\ServiceCollection;
 use Elephox\Http\Response;
 use Elephox\Http\ResponseCode;
@@ -17,10 +19,11 @@ use Elephox\Miniphox\Middleware\RequestJsonBodyParserMiddleware;
 use Elephox\Miniphox\Middleware\RequestLoggerMiddleware;
 use Elephox\Miniphox\Middleware\StaticFileServerMiddleware;
 use Elephox\Miniphox\Services\DtoResolverService;
+use Elephox\Miniphox\Services\LoggerProviderService;
+use Elephox\Miniphox\Services\RequestProviderService;
 use Elephox\OOR\Casing;
 use Fruitcake\Cors\CorsService;
 use JetBrains\PhpStorm\ArrayShape;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -48,21 +51,30 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
         return Casing::toLower(trim($namespace, '\\')) . '\\';
     }
 
-    private readonly ServiceCollectionContract $services;
+    private readonly ServiceProviderContract $services;
     private readonly ArraySet $middlewares;
 
     public function __construct(string $routesNamespace, ?ServiceCollectionContract $services, ?ArraySet $middlewares)
     {
         $routesNamespace = self::normalizeNamespace($routesNamespace);
 
-        $this->services = $services ?? new ServiceCollection();
-        $this->services->addSingleton(LoggerInterface::class, SingleSinkLogger::class, fn (): SingleSinkLogger => new SingleSinkLogger(new EnhancedMessageSink(new SimpleFormatColorSink(new StandardSink()))));
-        $this->services->addSingleton(DtoResolverService::class, DtoResolverService::class, fn (): DtoResolverService => new DtoResolverService());
-        $this->services->addSingleton(Minirouter::class, Minirouter::class, function (LoggerInterface $logger, DtoResolverService $dtoResolver) use ($routesNamespace) {
+        $services ??= new ServiceCollection();
+        $services->addSingleton(DtoResolverService::class, DtoResolverService::class, fn () => new DtoResolverService());
+        $services->addSingleton(Minirouter::class, Minirouter::class, function (LoggerInterface $logger, DtoResolverService $dtoResolver) use ($routesNamespace) {
             $router = new Minirouter($routesNamespace, $dtoResolver);
             $router->setLogger($logger);
             return $router;
         });
+        $services->addSingleton(RequestProviderService::class, factory: fn () => new RequestProviderService());
+        $services->addTransient(ServerRequestInterface::class, factory: fn (RequestProviderService $requestProvider) => $requestProvider->getRequest());
+        $services->addSingleton(LoggerProviderService::class, factory: function () {
+            $provider = new LoggerProviderService();
+            $provider->setLogger(new SingleSinkLogger(new EnhancedMessageSink(new SimpleFormatColorSink(new StandardSink()))));
+            return $provider;
+        });
+        $services->addTransient(LoggerInterface::class, factory: fn (LoggerProviderService $provider) => $provider->getLogger());
+
+        $this->services = $services->buildProvider();
 
         $this->middlewares = $middlewares ?? new ArraySet();
         $this->middlewares->add(new RequestJsonBodyParserMiddleware());
@@ -132,7 +144,7 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
 
     public function setLogger(LoggerInterface $logger): void
     {
-        $this->services->addSingleton(LoggerInterface::class, instance: $logger);
+        $this->services->get(LoggerProviderService::class)->setLogger($logger);
     }
 
     protected function getLogger(): LoggerInterface
@@ -145,7 +157,7 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
         return $this->services->get(Minirouter::class);
     }
 
-    public function getServices(): ServiceCollectionContract
+    public function getServices(): ServiceProviderContract
     {
         return $this->services;
     }
@@ -179,7 +191,7 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         try {
-            $callback = $this->getRouter()->getHandler($request, $this->services);
+            $callback = $this->getRouter()->getHandler($request, $this->services->get(Resolver::class));
             $result = $callback();
 
             if (is_string($result)) {
@@ -208,8 +220,7 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
     }
 
     protected function beforeRequestHandling(ServerRequestInterface $request): ServerRequestInterface {
-        $this->services->addSingleton(ServerRequestInterface::class, instance: $request);
-        $this->services->addSingleton(RequestInterface::class, instance: $request);
+        $this->services->get(RequestProviderService::class)->setRequest($request);
 
         return $request;
     }
@@ -219,8 +230,7 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
     }
 
     protected function afterResponseSent(ServerRequestInterface $request, ResponseInterface $response): void {
-        $this->services->remove(RequestInterface::class);
-        $this->services->remove(ServerRequestInterface::class);
+        $this->services->get(RequestProviderService::class)->clearRequest();
     }
 
     public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface
