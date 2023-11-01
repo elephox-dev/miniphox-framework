@@ -8,6 +8,7 @@ use Elephox\DI\Contract\Resolver;
 use Elephox\DI\Contract\ServiceCollection as ServiceCollectionContract;
 use Elephox\DI\Contract\ServiceProvider as ServiceProviderContract;
 use Elephox\DI\ServiceCollection;
+use Elephox\Http\Contract\ResponseBuilder;
 use Elephox\Http\Response;
 use Elephox\Http\ResponseCode;
 use Elephox\Logging\EnhancedMessageSink;
@@ -200,6 +201,8 @@ class MiniphoxBase implements LoggerAwareInterface, RequestHandlerInterface, Res
                 $response = Response::build()->responseCode(ResponseCode::OK)->jsonBody($result)->get();
             } else if ($result instanceof ResponseInterface) {
                 $response = $result;
+            } else if ($result instanceof ResponseBuilder) {
+                $response = $result->get();
             } else {
                 throw new RuntimeException(sprintf("Unable to infer response from type %s. Please return a string, array or instance of %s", get_debug_type($result), ResponseInterface::class));
             }
