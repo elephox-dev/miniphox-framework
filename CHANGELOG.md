@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.8.7
+-------------
+
+* Add support for response builder results
+
 Version 0.8.6
 -------------
 
