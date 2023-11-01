@@ -223,17 +223,22 @@ class Minirouter implements LoggerAwareInterface
         $pathPart = strtok($path, '/');
         while ($pathPart !== false) {
             if (!isset($routes[$pathPart])) {
-                $dynamicPathPart = KeyedEnumerable::from($routes)
-                    ->where(fn(array $src, string $k) => str_starts_with($k, '[') && str_ends_with($k, ']'))
-                    ->firstKeyOrDefault(null); // TODO: check if multiple dynamic routes exist and determine best fit
-                if ($dynamicPathPart === null) {
-                    return fn () => $this->handleNotFound($request);
+                $found = false;
+                foreach ($routes as $routePart => $subRoutes) {
+                    if (str_starts_with($routePart, '{') && str_ends_with($routePart, '}')) {
+                        $routes = &$subRoutes;
+                        $routePartName = trim($routePart, '{}');
+                        $routeParams[$routePartName] = $pathPart;
+
+                        // TODO: check if multiple dynamic routes exist and determine best fit
+                        $found = true;
+                        break;
+                    }
                 }
 
-                $routes = &$routes[$dynamicPathPart];
-
-                $dynamicPartName = trim($dynamicPathPart, '[]');
-                $routeParams[$dynamicPartName] = $pathPart;
+                if (!$found) {
+                    return fn () => $this->handleNotFound($request);
+                }
             } else {
                 $routes = &$routes[$pathPart];
             }
