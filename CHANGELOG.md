@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.8.8
+-------------
+
+* Update dynamic route parsing
+
 Version 0.8.7
 -------------
 
